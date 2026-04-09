@@ -18,7 +18,7 @@ UPLOAD_FOLDER = "/var/data/uploads"
 os.makedirs(BASE_PATH, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(BASE_PATH, "datos.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////var/data/datos.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
