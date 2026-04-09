@@ -251,7 +251,9 @@ button{
 </div>
 
 <script>
-const socket = io();
+const socket = io({
+    transports: ["websocket"]
+});
 
 function enviar(e){
     e.preventDefault();
@@ -264,7 +266,9 @@ function enviar(e){
     });
 }
 
-socket.on("actualizar_lista", ()=>location.reload());
+socket.on("actualizar_lista", ()=>{
+    setTimeout(()=>location.reload(), 300);
+});
 
 function compartir(){
     window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
