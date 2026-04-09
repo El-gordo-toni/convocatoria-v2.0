@@ -8,7 +8,7 @@ from openpyxl import Workbook
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-app.secret_key = "super_secret_key"
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "12345")
 
 # 📁 RUTAS
 BASE_PATH = os.path.abspath("DATA_PATH", "/var/data")
