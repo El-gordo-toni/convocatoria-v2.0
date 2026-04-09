@@ -11,7 +11,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 app.secret_key = "super_secret_key"
 
 # 📁 RUTAS
-BASE_PATH = os.path.abspath("data")
+BASE_PATH = os.path.abspath("DATA_PATH", "/var/data")
 UPLOAD_FOLDER = os.path.join(BASE_PATH, "uploads")
 
 os.makedirs(BASE_PATH, exist_ok=True)
@@ -300,4 +300,4 @@ def bg():
 # RUN
 # =========================
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000)
