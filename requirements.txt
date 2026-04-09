@@ -1,7 +1,6 @@
 flask
-flask_sqlalchemy
-gunicorn
-openpyxl
-werkzeug
+flask-sqlalchemy
 flask-socketio
 eventlet
+openpyxl
+gunicorn
