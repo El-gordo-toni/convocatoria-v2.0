@@ -11,8 +11,8 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "12345")
 
 # 📁 RUTAS
-BASE_PATH = os.path.abspath("DATA_PATH", "/var/data")
-UPLOAD_FOLDER = os.path.join(BASE_PATH, "uploads")
+BASE_PATH = "/var/data"
+UPLOAD_FOLDER = "/var/data/uploads"
 
 os.makedirs(BASE_PATH, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
