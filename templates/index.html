@@ -251,9 +251,7 @@ button{
 </div>
 
 <script>
-const socket = io({
-    transports: ["websocket"]
-});
+const socket = io(window.location.origin);
 
 function enviar(e){
     e.preventDefault();
