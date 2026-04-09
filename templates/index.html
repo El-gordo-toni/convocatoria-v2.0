@@ -251,7 +251,16 @@ button{
 </div>
 
 <script>
+<script>
 const socket = io(window.location.origin);
+
+socket.on("connect", () => {
+    console.log("✅ Conectado");
+});
+
+socket.on("connect_error", (err) => {
+    console.log("❌ Error:", err);
+});
 
 function enviar(e){
     e.preventDefault();
