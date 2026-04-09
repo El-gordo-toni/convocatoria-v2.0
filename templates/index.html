@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+    background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}?v={{ config.id }}") center/cover no-repeat fixed;
+    color:white;
+}
+
+.overlay{
+    background:rgba(0,0,0,0.85);
+    min-height:100vh;
+    padding:15px;
+}
+
+.container{
+    max-width:500px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    color:black;
+    padding:15px;
+    border-radius:16px;
+    margin-bottom:12px;
+}
+
+input, select{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+    font-size:16px;
+    background:white;
+}
+
+select{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg fill='black' height='20' viewBox='0 0 20 20'><path d='M5 7l5 5 5-5z'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#1f7a3f;
+    color:white;
+    font-weight:bold;
+}
+
+.btn-delete{
+    background:red;
+    width:auto;
+    padding:6px 10px;
+}
+
+.admin-card{
+    border:2px solid #1f7a3f;
+}
+
+.hidden{ display:none; }
+
+</style>
+</head>
+
+<body>
+<div class="overlay">
+<div class="container">
+
+<h2 style="text-align:center;">{{ config.titulo }}</h2>
+<p style="text-align:center;">{{ config.subtitulo }}</p>
+<p style="text-align:center;">{{ config.subtitulo2 }}</p>
+<p style="text-align:center;">{{ config.subtitulo3 }}</p>
+
+<!-- FORM -->
+<div class="card">
+<form onsubmit="enviar(event)">
+<input name="nombre" placeholder="Nombre" required>
+<input name="apellido" placeholder="Apellido" required>
+
+<!-- EQUIPO -->
+<select id="equipo" required>
+<option value="" disabled selected>Seleccionar equipo</option>
+<option value="Team 22">🏌️ Team 22</option>
+<option value="Aguilas">🦅 Águilas</option>
+</select>
+
+<!-- MENU -->
+{% if menu_activo %}
+<select id="asistencia" required>
+<option value="" disabled selected>Seleccionar Menu</option>
+{% for op in menu_opciones %}
+<option value="{{ op }}">{{ op }}</option>
+{% endfor %}
+</select>
+{% endif %}
+
+<button>Anotarme</button>
+</form>
+</div>
+
+{% if config.whatsapp_activo %}
+<div class="card">
+<button onclick="compartir()">📲 Compartir</button>
+</div>
+{% endif %}
+
+<!-- TEAM 22 -->
+<div class="card">
+<select onclick="bloquearSelect(this)">
+<option disabled selected>
+🏌️ Team 22 ({{ participantes|selectattr('equipo','equalto','Team 22')|list|length }}) Tocar para ver
+</option>
+
+{% for p in participantes if p.equipo == "Team 22" %}
+<option disabled>{{ p.nombre }} {{ p.apellido }}</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- AGUILAS -->
+<div class="card">
+<select onclick="bloquearSelect(this)">
+<option disabled selected>
+🦅 Águilas ({{ participantes|selectattr('equipo','equalto','Aguilas')|list|length }}) Tocar para ver
+</option>
+
+{% for p in participantes if p.equipo == "Aguilas" %}
+<option disabled>{{ p.nombre }} {{ p.apellido }}</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- HDCP -->
+<div class="card">
+<select onclick="bloquearSelect(this)">
+<option disabled selected>
+🏌️ HDCP ({{ handicaps|length }}) Tocar para ver
+</option>
+
+{% for h in handicaps|sort(attribute='nombre') %}
+<option disabled>{{ h.nombre }} - {{ h.hdcp }}</option>
+{% endfor %}
+</select>
+</div>
+
+<!-- ADMIN -->
+{% if admin %}
+<div class="card admin-card">
+
+<h3>⚙️ Configuración</h3>
+
+<form method="POST" action="/update_config">
+<input name="titulo" value="{{ config.titulo }}">
+<input name="subtitulo" value="{{ config.subtitulo }}">
+<input name="subtitulo2" value="{{ config.subtitulo2 }}">
+<input name="subtitulo3" value="{{ config.subtitulo3 }}">
+<input name="opciones_menu" value="{{ config.opciones_menu }}">
+
+<label>
+<input type="checkbox" name="menu_activo" {% if config.menu_activo %}checked{% endif %}>
+ Activar menú
+</label>
+
+<label>
+<input type="checkbox" name="whatsapp_activo" {% if config.whatsapp_activo %}checked{% endif %}>
+ Activar WhatsApp
+</label>
+
+<button>Guardar</button>
+</form>
+
+<hr>
+
+<h3>👥 Editar Convocados</h3>
+{% for p in participantes %}
+<form method="POST" action="/edit_participante/{{ p.id }}">
+<input name="nombre" value="{{ p.nombre }}">
+<input name="apellido" value="{{ p.apellido }}">
+<input name="equipo" value="{{ p.equipo }}">
+
+<button>💾 Guardar</button>
+
+<a href="/delete/{{ p.id }}">
+<button type="button" class="btn-delete">❌</button>
+</a>
+</form>
+{% endfor %}
+
+<hr>
+
+<h3>🏌️ Editar HDCP</h3>
+{% for h in handicaps %}
+<form method="POST" action="/edit_hdcp/{{ h.id }}">
+<input name="nombre" value="{{ h.nombre }}">
+<input name="hdcp" value="{{ h.hdcp }}">
+<button>💾 Guardar</button>
+
+<a href="/delete_hdcp/{{ h.id }}">
+<button type="button" class="btn-delete">❌</button>
+</a>
+</form>
+{% endfor %}
+
+<hr>
+
+<h3>📥 Importar HDCP</h3>
+<form method="POST" action="/upload_hdcp" enctype="multipart/form-data">
+<input type="file" name="file">
+<button>Subir Excel</button>
+</form>
+
+<hr>
+
+<h3>➕ Agregar HDCP</h3>
+<form method="POST" action="/add_hdcp">
+<input name="nombre">
+<input name="hdcp">
+<button>Agregar</button>
+</form>
+
+<hr>
+
+<h3>🖼 Fondo</h3>
+<form method="POST" action="/upload_bg" enctype="multipart/form-data">
+<input type="file" name="imagen">
+<button>Subir fondo</button>
+</form>
+
+<hr>
+
+<a href="/reset">Resetear</a><br><br>
+<a href="/export">Exportar</a><br><br>
+<a href="/logout">Salir</a>
+
+</div>
+{% endif %}
+
+</div>
+</div>
+
+<script>
+const socket = io();
+
+function enviar(e){
+    e.preventDefault();
+
+    socket.emit("nuevo_participante", {
+        nombre: document.querySelector('[name="nombre"]').value,
+        apellido: document.querySelector('[name="apellido"]').value,
+        equipo: document.getElementById("equipo").value,
+        asistencia: document.getElementById("asistencia")?.value
+    });
+}
+
+socket.on("actualizar_lista", ()=>location.reload());
+
+function compartir(){
+    window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
+}
+
+function bloquearSelect(select){
+    select.addEventListener("change", function(){
+        this.selectedIndex = 0;
+    });
+}
+</script>
+
+</body>
+</html>
