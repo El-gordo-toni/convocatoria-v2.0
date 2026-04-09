@@ -118,7 +118,7 @@ button{
 
 <!-- TEAM 22 -->
 <div class="card">
-<select onclick="bloquearSelect(this)">
+<select>
 <option disabled selected>
 🏌️ Team 22 ({{ participantes|selectattr('equipo','equalto','Team 22')|list|length }}) Tocar para ver
 </option>
@@ -131,7 +131,7 @@ button{
 
 <!-- AGUILAS -->
 <div class="card">
-<select onclick="bloquearSelect(this)">
+<select>
 <option disabled selected>
 🦅 Águilas ({{ participantes|selectattr('equipo','equalto','Aguilas')|list|length }}) Tocar para ver
 </option>
@@ -144,7 +144,7 @@ button{
 
 <!-- HDCP -->
 <div class="card">
-<select onclick="bloquearSelect(this)">
+<select>
 <option disabled selected>
 🏌️ HDCP ({{ handicaps|length }}) Tocar para ver
 </option>
@@ -287,6 +287,12 @@ function bloquearSelect(select){
     });
 }
 </script>
-
+<script>
+document.querySelectorAll("select").forEach(select => {
+    select.addEventListener("change", function(){
+        this.selectedIndex = 0;
+    });
+});
+</script>
 </body>
 </html>
