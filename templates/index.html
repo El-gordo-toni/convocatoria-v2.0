@@ -119,7 +119,9 @@ button{
 
 <!-- SCRIPT LIMPIO -->
 <script>
-const socket = io(window.location.origin);
+const socket = io(window.location.origin, {
+    transports: ["polling"]
+});
 
 // conexión
 socket.on("connect", () => console.log("✅ Conectado"));
