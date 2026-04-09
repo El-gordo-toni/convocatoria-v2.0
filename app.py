@@ -1,5 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
 from flask import Flask, render_template, request, redirect, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
@@ -8,7 +6,7 @@ import re
 from openpyxl import Workbook
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 app.secret_key = "super_secret_key"
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
