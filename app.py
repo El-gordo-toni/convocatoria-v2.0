@@ -248,7 +248,8 @@ def update_config():
         return "No autorizado",403
 
     config = Config.query.first()
-
+    menu_opciones = config.opciones_menu.split(",") if config.opciones_menu else []
+    
     config.titulo = request.form.get("titulo")
     config.subtitulo = request.form.get("subtitulo")
     config.subtitulo2 = request.form.get("subtitulo2")
