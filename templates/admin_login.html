@@ -1,13 +1,58 @@
 <!DOCTYPE html>
 <html>
-<body style="text-align:center; margin-top:100px;">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<h2>🔒 Admin</h2>
+<style>
+body{
+    font-family:sans-serif;
+    background:#111;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
 
-<form method="POST" action="/admin">
-<input type="password" name="password" placeholder="Contraseña">
-<button>Entrar</button>
+.card{
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:15px;
+    width:300px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#1f7a3f;
+    color:white;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h3>🔐 Admin</h3>
+
+<form action="/admin" method="POST">
+    <input type="password" name="password" placeholder="Contraseña">
+    <button type="submit">Entrar</button>
 </form>
+
+</div>
 
 </body>
 </html>
