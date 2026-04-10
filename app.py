@@ -2,14 +2,13 @@ from flask import Flask, render_template, request, redirect, session, send_file,
 from flask_sqlalchemy import SQLAlchemy
 import os
 import re
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 app = Flask(__name__)
 
 app.secret_key = "super_secret_key"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "12345")  # fallback seguro
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
-# 📁 RUTAS
 BASE_PATH = "/var/data"
 UPLOAD_FOLDER = "/var/data/uploads"
 
@@ -21,9 +20,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# =========================
-# MODELOS
-# =========================
+# ================= MODELOS =================
+
 class Participante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
@@ -35,7 +33,7 @@ class Participante(db.Model):
 class Config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), default="🏌️ Torneo Matungo")
-    subtitulo = db.Column(db.String(200), default="Anotate para la próxima fecha")
+    subtitulo = db.Column(db.String(200), default="")
     subtitulo2 = db.Column(db.String(200), default="")
     subtitulo3 = db.Column(db.String(200), default="")
     opciones_menu = db.Column(db.Text, default="8:00 AM,9:00 AM,10:00 AM")
@@ -55,29 +53,26 @@ with app.app_context():
         db.session.add(Config())
         db.session.commit()
 
-# =========================
-# VALIDACIÓN
-# =========================
+
+# ================= VALIDACION =================
+
 def solo_letras(t):
     return re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", t)
 
-# =========================
-# PARTICIPANTES API
-# =========================
+
+# ================= API PARTICIPANTES =================
+
 @app.route("/participantes")
 def participantes():
-    jugadores = Participante.query.order_by(Participante.nombre.asc()).all()
+    data = Participante.query.all()
     return jsonify([
-        {
-            "nombre": j.nombre,
-            "apellido": j.apellido,
-            "equipo": j.equipo
-        } for j in jugadores
+        {"nombre": p.nombre, "apellido": p.apellido, "equipo": p.equipo}
+        for p in data
     ])
 
-# =========================
-# AGREGAR PARTICIPANTE
-# =========================
+
+# ================= AGREGAR =================
+
 @app.route("/agregar", methods=["POST"])
 def agregar():
     config = Config.query.first()
@@ -88,72 +83,69 @@ def agregar():
     equipo = request.form.get("equipo")
 
     if not equipo:
-        return "Seleccioná equipo", 400
-
-    if config and config.menu_activo and not asistencia:
-        return "Seleccioná horario", 400
-
+        return "Falta equipo", 400
+    if config.menu_activo and not asistencia:
+        return "Falta horario", 400
     if not solo_letras(nombre) or not solo_letras(apellido):
         return "Nombre inválido", 400
-
     if Participante.query.filter_by(nombre=nombre, apellido=apellido).first():
-        return "Ya anotado", 400
+        return "Ya existe", 400
 
     db.session.add(Participante(
         nombre=nombre,
         apellido=apellido,
-        asistencia=asistencia or "",
+        asistencia=asistencia,
         equipo=equipo
     ))
     db.session.commit()
 
     return redirect("/")
 
-# =========================
-# ADMIN LOGIN
-# =========================
+
+# ================= ADMIN LOGIN =================
+
 @app.route("/admin", methods=["POST"])
 def admin_login():
     if request.form.get("password") == ADMIN_PASSWORD:
         session["admin"] = True
     return redirect("/")
 
+
 @app.route("/admin-secret")
 def admin_secret():
     return render_template("admin_login.html")
+
 
 @app.route("/logout")
 def logout():
     session.pop("admin", None)
     return redirect("/")
 
-# =========================
-# HOME (FIX MENÚ)
-# =========================
+
+# ================= HOME (FIX MENÚ SEGURO) =================
+
 @app.route("/")
 def index():
     config = Config.query.first()
 
     menu_opciones = []
     if config and config.opciones_menu:
-        menu_opciones = [
-            x.strip() for x in config.opciones_menu.split(",") if x.strip()
-        ]
+        menu_opciones = [x.strip() for x in config.opciones_menu.split(",") if x.strip()]
 
     return render_template(
         "index.html",
         participantes=Participante.query.all(),
         handicaps=Handicap.query.all(),
         menu_opciones=menu_opciones,
-        menu_activo=config.menu_activo if config else True,
+        menu_activo=config.menu_activo,
         admin=session.get("admin", False),
         bg_path="/static_bg" if os.path.exists(os.path.join(UPLOAD_FOLDER, "fondo.jpg")) else None,
         config=config
     )
 
-# =========================
-# CONFIG UPDATE
-# =========================
+
+# ================= CONFIG =================
+
 @app.route("/update_config", methods=["POST"])
 def update_config():
     if not session.get("admin"):
@@ -166,17 +158,17 @@ def update_config():
     config.subtitulo2 = request.form.get("subtitulo2") or config.subtitulo2
     config.subtitulo3 = request.form.get("subtitulo3") or config.subtitulo3
 
-    config.opciones_menu = request.form.get("opciones_menu") or config.opciones_menu
+    config.opciones_menu = request.form.get("opciones_menu") or "8:00 AM,9:00 AM,10:00 AM"
 
-    config.menu_activo = "menu_activo" in request.form
-    config.whatsapp_activo = "whatsapp_activo" in request.form
+    config.menu_activo = True if request.form.get("menu_activo") == "on" else False
+    config.whatsapp_activo = True if request.form.get("whatsapp_activo") == "on" else False
 
     db.session.commit()
     return redirect("/")
 
-# =========================
-# RESET
-# =========================
+
+# ================= RESET =================
+
 @app.route("/reset")
 def reset():
     if not session.get("admin"):
@@ -186,9 +178,9 @@ def reset():
     db.session.commit()
     return redirect("/")
 
-# =========================
-# EXPORT EXCEL
-# =========================
+
+# ================= EXPORT EXCEL =================
+
 @app.route("/export")
 def export():
     if not session.get("admin"):
@@ -206,26 +198,57 @@ def export():
 
     return send_file(path, as_attachment=True)
 
-# =========================
-# FONDO
-# =========================
+
+# ================= UPLOAD EXCEL HDCP (NUEVO) =================
+
+@app.route("/upload_hdcp", methods=["POST"])
+def upload_hdcp():
+    if not session.get("admin"):
+        return "No autorizado", 403
+
+    file = request.files.get("file")
+    if not file:
+        return redirect("/")
+
+    wb = load_workbook(file)
+    ws = wb.active
+
+    Handicap.query.delete()
+
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        if i == 0:
+            continue
+        nombre, hdcp = row
+        if nombre and hdcp:
+            db.session.add(Handicap(
+                nombre=str(nombre).strip(),
+                hdcp=str(hdcp).strip()
+            ))
+
+    db.session.commit()
+    return redirect("/")
+
+
+# ================= FONDO =================
+
 @app.route("/upload_bg", methods=["POST"])
 def upload_bg():
     if not session.get("admin"):
         return "No autorizado", 403
 
     file = request.files.get("imagen")
-    if file:
+    if file and file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
         file.save(os.path.join(UPLOAD_FOLDER, "fondo.jpg"))
 
     return redirect("/")
+
 
 @app.route("/static_bg")
 def bg():
     return send_file(os.path.join(UPLOAD_FOLDER, "fondo.jpg"))
 
-# =========================
-# RUN
-# =========================
+
+# ================= RUN =================
+
 if __name__ == "__main__":
     app.run()
