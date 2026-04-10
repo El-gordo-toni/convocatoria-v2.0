@@ -93,7 +93,7 @@ def nuevo_participante(data):
         ))
         db.session.commit()
 
-    socketio.emit("actualizar_lista", broadcast=True)
+    socketio.emit("actualizar_lista")
 
 # =========================
 # ADMIN LOGIN
