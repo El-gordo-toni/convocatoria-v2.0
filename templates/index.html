@@ -120,6 +120,11 @@ button{
 <a href="/reset"><button>♻️ Resetear participantes</button></a>
 <a href="/logout"><button>🚪 Cerrar sesión</button></a>
 
+<form action="/upload-bg" method="POST" enctype="multipart/form-data">
+    <input type="file" name="bg" accept="image/*" required>
+    <button>🖼️ Subir fondo</button>
+</form>
+
 </div>
 {% endif %}
 
