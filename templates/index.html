@@ -151,6 +151,20 @@ a { text-decoration:none; }
 <input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
 <input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
 
+<!-- 🔥 MENU ACTIVO -->
+<label style="display:block;margin:10px 0;">
+    <input type="checkbox" name="menu_activo"
+        {% if config.menu_activo %}checked{% endif %}>
+    Activar menú de horarios
+</label>
+
+<!-- 🔥 WHATSAPP ACTIVO -->
+<label style="display:block;margin:10px 0;">
+    <input type="checkbox" name="whatsapp_activo"
+        {% if config.whatsapp_activo %}checked{% endif %}>
+    Activar botón WhatsApp
+</label>
+
 <button type="submit">💾 Guardar cambios</button>
 </form>
 <form action="/upload_hdcp" method="POST" enctype="multipart/form-data">
