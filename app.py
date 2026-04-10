@@ -1,15 +1,13 @@
-from flask import Flask, render_template, request, redirect, session, send_file
+from flask import Flask, render_template, request, redirect, session, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_socketio import SocketIO
 import os
 import re
 from openpyxl import Workbook
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 app.secret_key = "super_secret_key"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "12345")
 
 # 📁 RUTAS
 BASE_PATH = "/var/data"
@@ -32,7 +30,7 @@ class Participante(db.Model):
     apellido = db.Column(db.String(100), nullable=False)
     matricula = db.Column(db.String(50))
     asistencia = db.Column(db.String(100))
-    equipo = db.Column(db.String(50))  # 👈 NUEVO
+    equipo = db.Column(db.String(50))
 
 class Config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,53 +56,62 @@ with app.app_context():
 # =========================
 # VALIDACIONES
 # =========================
-def solo_letras(t): return re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", t)
+def solo_letras(t):
+    return re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", t)
 
 # =========================
-# WEBSOCKET
+# NUEVO: API PARTICIPANTES (POLLING)
 # =========================
-@socketio.on("nuevo_participante")
-def nuevo_participante(data):
+@app.route("/participantes")
+def participantes():
+    jugadores = Participante.query.order_by(Participante.nombre.asc()).all()
+    return jsonify([
+        {
+            "nombre": j.nombre,
+            "apellido": j.apellido,
+            "equipo": j.equipo
+        } for j in jugadores
+    ])
+
+# =========================
+# NUEVO: REGISTRO SIN SOCKET
+# =========================
+@app.route("/agregar", methods=["POST"])
+def agregar():
     config = Config.query.first()
 
-    nombre = data["nombre"].strip()
-    apellido = data["apellido"].strip()
-    asistencia = data.get("asistencia")
-    equipo = data.get("equipo")
-
-    error = None
+    nombre = request.form.get("nombre", "").strip()
+    apellido = request.form.get("apellido", "").strip()
+    asistencia = request.form.get("asistencia")
+    equipo = request.form.get("equipo")
 
     if not equipo:
-        error = "Seleccioná un equipo"
-    elif config.menu_activo and not asistencia:
-        error = "Seleccioná un horario"
-    elif not solo_letras(nombre):
-        error = "Nombre inválido"
-    elif not solo_letras(apellido):
-        error = "Apellido inválido"
-    elif Participante.query.filter_by(nombre=nombre, apellido=apellido).first():
-        error = "Ya anotado"
-    else:
-        db.session.add(Participante(
-            nombre=nombre,
-            apellido=apellido,
-            asistencia=asistencia if asistencia else "",
-            equipo=equipo
-        ))
-        db.session.commit()
+        return "Seleccioná un equipo", 400
+    if config.menu_activo and not asistencia:
+        return "Seleccioná un horario", 400
+    if not solo_letras(nombre):
+        return "Nombre inválido", 400
+    if not solo_letras(apellido):
+        return "Apellido inválido", 400
+    if Participante.query.filter_by(nombre=nombre, apellido=apellido).first():
+        return "Ya anotado", 400
 
-    socketio.emit("nuevo_jugador", {
-    "nombre": nombre,
-    "apellido": apellido,
-    "equipo": equipo
-})
+    db.session.add(Participante(
+        nombre=nombre,
+        apellido=apellido,
+        asistencia=asistencia if asistencia else "",
+        equipo=equipo
+    ))
+    db.session.commit()
+
+    return redirect("/")
 
 # =========================
 # ADMIN LOGIN
 # =========================
 @app.route("/admin", methods=["POST"])
 def admin_login():
-    if request.form.get("password") == "12345":
+    if request.form.get("password") == ADMIN_PASSWORD:
         session["admin"] = True
     return redirect("/")
 
@@ -305,4 +312,4 @@ def bg():
 # RUN
 # =========================
 if __name__ == "__main__":
-    socketio.run(app)
+    app.run()
