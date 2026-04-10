@@ -140,21 +140,64 @@ function enviar(e){
 }
 
 // actualizar lista
-socket.on("actualizar_lista", ()=>{
-    fetch("/")
-    .then(res => res.text())
-    .then(html => {
-        const nueva = new DOMParser()
-            .parseFromString(html, "text/html")
-            .querySelector(".container");
+socket.on("nuevo_jugador", (data)=>{
+    console.log("🟢 Nuevo jugador:", data);
 
-        document.querySelector(".container").innerHTML = nueva.innerHTML;
-    });
+    const texto = data.nombre + " " + data.apellido;
+
+    // TEAM 22
+    if(data.equipo === "Team 22"){
+        const select = document.querySelectorAll(".bloqueado")[0];
+        const option = document.createElement("option");
+        option.textContent = texto;
+        option.disabled = true;
+        select.appendChild(option);
+
+        actualizarContador(select, "🏌️ Team 22");
+    }
+
+    // AGUILAS
+    if(data.equipo === "Aguilas"){
+        const select = document.querySelectorAll(".bloqueado")[1];
+        const option = document.createElement("option");
+        option.textContent = texto;
+        option.disabled = true;
+        select.appendChild(option);
+
+        actualizarContador(select, "🦅 Águilas");
+    }
+
+    animarAlta();
 });
 
 // compartir
 function compartir(){
     window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
+}
+
+function actualizarContador(select, titulo){
+    const cantidad = select.options.length - 1;
+
+    select.options[0].textContent =
+        `${titulo} (${cantidad}) Tocar para ver`;
+}
+
+function animarAlta(){
+    const div = document.createElement("div");
+    div.textContent = "✅ Jugador agregado";
+    div.style.position = "fixed";
+    div.style.bottom = "20px";
+    div.style.left = "50%";
+    div.style.transform = "translateX(-50%)";
+    div.style.background = "#1f7a3f";
+    div.style.color = "white";
+    div.style.padding = "10px 20px";
+    div.style.borderRadius = "10px";
+    div.style.zIndex = "9999";
+
+    document.body.appendChild(div);
+
+    setTimeout(()=>div.remove(), 1500);
 }
 
 // bloquear solo listas
