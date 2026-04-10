@@ -93,7 +93,11 @@ def nuevo_participante(data):
         ))
         db.session.commit()
 
-    socketio.emit("actualizar_lista")
+    socketio.emit("nuevo_jugador", {
+    "nombre": nombre,
+    "apellido": apellido,
+    "equipo": equipo
+})
 
 # =========================
 # ADMIN LOGIN
