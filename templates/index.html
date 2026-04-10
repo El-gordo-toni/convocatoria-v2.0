@@ -141,7 +141,15 @@ function enviar(e){
 
 // actualizar lista
 socket.on("actualizar_lista", ()=>{
-    setTimeout(()=>location.reload(), 10);
+    fetch("/")
+    .then(res => res.text())
+    .then(html => {
+        const nueva = new DOMParser()
+            .parseFromString(html, "text/html")
+            .querySelector(".container");
+
+        document.querySelector(".container").innerHTML = nueva.innerHTML;
+    });
 });
 
 // compartir
