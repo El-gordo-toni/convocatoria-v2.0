@@ -119,8 +119,8 @@ button{
 
 <!-- SCRIPT LIMPIO -->
 <script>
-const socket = io(window.location.origin, {
-    transports: ["polling"]
+const socket = io({
+    transports: ["websocket"]
 });
 
 // conexión
