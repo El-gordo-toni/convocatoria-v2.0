@@ -7,16 +7,29 @@
 body{
     margin:0;
     font-family:-apple-system, BlinkMacSystemFont, sans-serif;
-    background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}?v={{ config.id }}") center/cover no-repeat fixed;
+    background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}") center/cover no-repeat fixed;
     color:white;
 }
+
 .overlay{ background:rgba(0,0,0,0.85); min-height:100vh; padding:15px; }
 .container{ max-width:500px; margin:auto; }
-.card{ background:white; color:black; padding:15px; border-radius:16px; margin-bottom:12px; }
+
+.card{
+    background:white;
+    color:black;
+    padding:15px;
+    border-radius:16px;
+    margin-bottom:12px;
+}
 
 input, select{
-    width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;
-    margin-bottom:10px; font-size:16px; background:white;
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+    font-size:16px;
+    background:white;
 }
 
 select{
@@ -28,12 +41,20 @@ select{
 }
 
 button{
-    width:100%; padding:14px; border:none; border-radius:12px;
-    background:#1f7a3f; color:white; font-weight:bold;
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#1f7a3f;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
 }
 
 .btn-delete{ background:red; width:auto; padding:6px 10px; }
 .admin-card{ border:2px solid #1f7a3f; }
+
+a { text-decoration:none; }
 </style>
 </head>
 
@@ -46,11 +67,11 @@ button{
 <p style="text-align:center;">{{ config.subtitulo2 }}</p>
 <p style="text-align:center;">{{ config.subtitulo3 }}</p>
 
-<!-- BOTON ADMIN (SI NO ESTA LOGUEADO) -->
+<!-- BOTON ADMIN -->
 {% if not admin %}
 <div class="card">
 <a href="/admin-secret">
-<button>🔐 Panel Admin</button>
+<button type="button">🔐 Panel Admin</button>
 </a>
 </div>
 {% endif %}
@@ -58,6 +79,7 @@ button{
 <!-- FORM -->
 <div class="card">
 <form action="/agregar" method="POST">
+
 <input name="nombre" placeholder="Nombre" required>
 <input name="apellido" placeholder="Apellido" required>
 
@@ -69,14 +91,18 @@ button{
 
 {% if menu_activo %}
 <select name="asistencia" required>
-<option value="" disabled selected>Seleccionar Menu</option>
+<option value="" disabled selected>Seleccionar horario</option>
+
 {% for op in menu_opciones %}
+{% if op %}
 <option value="{{ op }}">{{ op }}</option>
+{% endif %}
 {% endfor %}
+
 </select>
 {% endif %}
 
-<button>Anotarme</button>
+<button type="submit">Anotarme</button>
 </form>
 </div>
 
@@ -110,37 +136,32 @@ button{
 </select>
 </div>
 
-<!-- PANEL ADMIN (SI ESTA LOGUEADO) -->
+<!-- PANEL ADMIN -->
 {% if admin %}
 <div class="card admin-card">
 
 <h3>⚙️ Panel Admin</h3>
-<div class="card admin-card">
 
 <h3>📝 Configurar textos</h3>
 
 <form method="POST" action="/update_config">
 
 <input name="titulo" value="{{ config.titulo }}" placeholder="Título">
-
 <input name="subtitulo" value="{{ config.subtitulo }}" placeholder="Subtítulo 1">
-
 <input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
-
 <input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
 
-<button>💾 Guardar cambios</button>
-
+<button type="submit">💾 Guardar cambios</button>
 </form>
 
-</div>
 <a href="/export"><button>📤 Exportar Excel</button></a>
 <a href="/reset"><button>♻️ Resetear participantes</button></a>
 <a href="/logout"><button>🚪 Cerrar sesión</button></a>
 
-<form action="/upload-bg" method="POST" enctype="multipart/form-data">
-    <input type="file" name="bg" accept="image/*" required>
-    <button>🖼️ Subir fondo</button>
+<!-- FIX BACKEND: name="imagen" -->
+<form action="/upload_bg" method="POST" enctype="multipart/form-data">
+    <input type="file" name="imagen" accept="image/*" required>
+    <button type="submit">🖼️ Subir fondo</button>
 </form>
 
 </div>
@@ -149,10 +170,8 @@ button{
 </div>
 </div>
 
-<!-- SCRIPT -->
 <script>
 
-// cargar participantes
 function cargarParticipantes(){
     fetch("/participantes")
         .then(res => res.json())
@@ -164,8 +183,8 @@ function cargarParticipantes(){
             team22.innerHTML = '<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>';
             aguilas.innerHTML = '<option disabled selected>🦅 Águilas (...) Tocar para ver</option>';
 
-            let count22 = 0;
-            let countAguilas = 0;
+            let c1 = 0;
+            let c2 = 0;
 
             data.forEach(p => {
                 const option = document.createElement("option");
@@ -174,35 +193,27 @@ function cargarParticipantes(){
 
                 if(p.equipo === "Team 22"){
                     team22.appendChild(option);
-                    count22++;
+                    c1++;
                 }
 
                 if(p.equipo === "Aguilas"){
                     aguilas.appendChild(option);
-                    countAguilas++;
+                    c2++;
                 }
             });
 
-            team22.options[0].textContent =
-                `🏌️ Team 22 (${count22}) Tocar para ver`;
-
-            aguilas.options[0].textContent =
-                `🦅 Águilas (${countAguilas}) Tocar para ver`;
+            team22.options[0].textContent = `🏌️ Team 22 (${c1}) Tocar para ver`;
+            aguilas.options[0].textContent = `🦅 Águilas (${c2}) Tocar para ver`;
         });
 }
 
-// cargar al inicio
 cargarParticipantes();
-
-// actualizar cada 2 segundos
 setInterval(cargarParticipantes, 2000);
 
-// compartir
 function compartir(){
     window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
 }
 
-// bloquear selects
 document.querySelectorAll(".bloqueado").forEach(select => {
     select.addEventListener("change", function(){
         this.selectedIndex = 0;
