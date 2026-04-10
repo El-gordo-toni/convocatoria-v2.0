@@ -7,7 +7,7 @@ from openpyxl import Workbook
 app = Flask(__name__)
 
 app.secret_key = "super_secret_key"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "12345")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 # 📁 RUTAS
 BASE_PATH = "/var/data"
