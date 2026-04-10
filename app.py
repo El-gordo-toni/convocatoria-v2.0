@@ -158,10 +158,14 @@ def update_config():
     config.subtitulo2 = request.form.get("subtitulo2") or config.subtitulo2
     config.subtitulo3 = request.form.get("subtitulo3") or config.subtitulo3
 
-    config.opciones_menu = request.form.get("opciones_menu") or "8:00 AM,9:00 AM,10:00 AM"
+    # 🔥 FIX MENÚ (EVITA NULL / VACÍO)
+    opciones = request.form.get("opciones_menu")
+    if opciones is not None:
+        config.opciones_menu = opciones
 
-    config.menu_activo = True if request.form.get("menu_activo") == "on" else False
-    config.whatsapp_activo = True if request.form.get("whatsapp_activo") == "on" else False
+    # 🔥 FIX CHECKBOXES (MUY IMPORTANTE)
+    config.menu_activo = bool(request.form.get("menu_activo"))
+    config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
 
     db.session.commit()
     return redirect("/")
