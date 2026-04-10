@@ -115,7 +115,25 @@ button{
 <div class="card admin-card">
 
 <h3>⚙️ Panel Admin</h3>
+<div class="card admin-card">
 
+<h3>📝 Configurar textos</h3>
+
+<form method="POST" action="/update_config">
+
+<input name="titulo" value="{{ config.titulo }}" placeholder="Título">
+
+<input name="subtitulo" value="{{ config.subtitulo }}" placeholder="Subtítulo 1">
+
+<input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
+
+<input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
+
+<button>💾 Guardar cambios</button>
+
+</form>
+
+</div>
 <a href="/export"><button>📤 Exportar Excel</button></a>
 <a href="/reset"><button>♻️ Resetear participantes</button></a>
 <a href="/logout"><button>🚪 Cerrar sesión</button></a>
