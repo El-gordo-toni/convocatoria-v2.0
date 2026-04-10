@@ -46,6 +46,15 @@ button{
 <p style="text-align:center;">{{ config.subtitulo2 }}</p>
 <p style="text-align:center;">{{ config.subtitulo3 }}</p>
 
+<!-- BOTON ADMIN (SI NO ESTA LOGUEADO) -->
+{% if not admin %}
+<div class="card">
+<a href="/admin-secret">
+<button>🔐 Panel Admin</button>
+</a>
+</div>
+{% endif %}
+
 <!-- FORM -->
 <div class="card">
 <form action="/agregar" method="POST">
@@ -101,6 +110,19 @@ button{
 </select>
 </div>
 
+<!-- PANEL ADMIN (SI ESTA LOGUEADO) -->
+{% if admin %}
+<div class="card admin-card">
+
+<h3>⚙️ Panel Admin</h3>
+
+<a href="/export"><button>📤 Exportar Excel</button></a>
+<a href="/reset"><button>♻️ Resetear participantes</button></a>
+<a href="/logout"><button>🚪 Cerrar sesión</button></a>
+
+</div>
+{% endif %}
+
 </div>
 </div>
 
@@ -116,7 +138,6 @@ function cargarParticipantes(){
             const team22 = document.getElementById("team22");
             const aguilas = document.getElementById("aguilas");
 
-            // reset
             team22.innerHTML = '<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>';
             aguilas.innerHTML = '<option disabled selected>🦅 Águilas (...) Tocar para ver</option>';
 
@@ -139,7 +160,6 @@ function cargarParticipantes(){
                 }
             });
 
-            // actualizar títulos
             team22.options[0].textContent =
                 `🏌️ Team 22 (${count22}) Tocar para ver`;
 
