@@ -1,1 +1,1 @@
-web: gunicorn -k gevent -w 1 app:socketio
+web: gunicorn -k gevent -w 1 --timeout 120 app:socketio
