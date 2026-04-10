@@ -153,7 +153,10 @@ a { text-decoration:none; }
 
 <button type="submit">💾 Guardar cambios</button>
 </form>
-
+<form action="/upload_hdcp" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".xlsx" required>
+    <button type="submit">📥 Subir Excel HDCP</button>
+</form>
 <a href="/export"><button>📤 Exportar Excel</button></a>
 <a href="/reset"><button>♻️ Resetear participantes</button></a>
 <a href="/logout"><button>🚪 Cerrar sesión</button></a>
