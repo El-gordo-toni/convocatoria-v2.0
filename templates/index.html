@@ -3,9 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- SOCKET ACTUALIZADO -->
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
 <style>
 body{
     margin:0;
@@ -51,18 +48,18 @@ button{
 
 <!-- FORM -->
 <div class="card">
-<form onsubmit="enviar(event)">
+<form action="/agregar" method="POST">
 <input name="nombre" placeholder="Nombre" required>
 <input name="apellido" placeholder="Apellido" required>
 
-<select id="equipo" required>
+<select name="equipo" required>
 <option value="" disabled selected>Seleccionar equipo</option>
 <option value="Team 22">🏌️ Team 22</option>
 <option value="Aguilas">🦅 Águilas</option>
 </select>
 
 {% if menu_activo %}
-<select id="asistencia" required>
+<select name="asistencia" required>
 <option value="" disabled selected>Seleccionar Menu</option>
 {% for op in menu_opciones %}
 <option value="{{ op }}">{{ op }}</option>
@@ -80,26 +77,16 @@ button{
 </div>
 {% endif %}
 
-<!-- LISTAS BLOQUEADAS -->
+<!-- LISTAS -->
 <div class="card">
-<select class="bloqueado">
-<option disabled selected>
-🏌️ Team 22 ({{ participantes|selectattr('equipo','equalto','Team 22')|list|length }}) Tocar para ver
-</option>
-{% for p in participantes if p.equipo == "Team 22" %}
-<option disabled>{{ p.nombre }} {{ p.apellido }}</option>
-{% endfor %}
+<select class="bloqueado" id="team22">
+<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>
 </select>
 </div>
 
 <div class="card">
-<select class="bloqueado">
-<option disabled selected>
-🦅 Águilas ({{ participantes|selectattr('equipo','equalto','Aguilas')|list|length }}) Tocar para ver
-</option>
-{% for p in participantes if p.equipo == "Aguilas" %}
-<option disabled>{{ p.nombre }} {{ p.apellido }}</option>
-{% endfor %}
+<select class="bloqueado" id="aguilas">
+<option disabled selected>🦅 Águilas (...) Tocar para ver</option>
 </select>
 </div>
 
@@ -117,95 +104,68 @@ button{
 </div>
 </div>
 
-<!-- SCRIPT LIMPIO -->
+<!-- SCRIPT -->
 <script>
-const socket = io({
-    transports: ["websocket"]
-});
 
-// conexión
-socket.on("connect", () => console.log("✅ Conectado"));
-socket.on("connect_error", (err) => console.log("❌ Error:", err));
+// cargar participantes
+function cargarParticipantes(){
+    fetch("/participantes")
+        .then(res => res.json())
+        .then(data => {
 
-// enviar datos
-function enviar(e){
-    e.preventDefault();
+            const team22 = document.getElementById("team22");
+            const aguilas = document.getElementById("aguilas");
 
-    socket.emit("nuevo_participante", {
-        nombre: document.querySelector('[name="nombre"]').value,
-        apellido: document.querySelector('[name="apellido"]').value,
-        equipo: document.getElementById("equipo").value,
-        asistencia: document.getElementById("asistencia")?.value
-    });
+            // reset
+            team22.innerHTML = '<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>';
+            aguilas.innerHTML = '<option disabled selected>🦅 Águilas (...) Tocar para ver</option>';
+
+            let count22 = 0;
+            let countAguilas = 0;
+
+            data.forEach(p => {
+                const option = document.createElement("option");
+                option.textContent = p.nombre + " " + p.apellido;
+                option.disabled = true;
+
+                if(p.equipo === "Team 22"){
+                    team22.appendChild(option);
+                    count22++;
+                }
+
+                if(p.equipo === "Aguilas"){
+                    aguilas.appendChild(option);
+                    countAguilas++;
+                }
+            });
+
+            // actualizar títulos
+            team22.options[0].textContent =
+                `🏌️ Team 22 (${count22}) Tocar para ver`;
+
+            aguilas.options[0].textContent =
+                `🦅 Águilas (${countAguilas}) Tocar para ver`;
+        });
 }
 
-// actualizar lista
-socket.on("nuevo_jugador", (data)=>{
-    console.log("🟢 Nuevo jugador:", data);
+// cargar al inicio
+cargarParticipantes();
 
-    const texto = data.nombre + " " + data.apellido;
-
-    // TEAM 22
-    if(data.equipo === "Team 22"){
-        const select = document.querySelectorAll(".bloqueado")[0];
-        const option = document.createElement("option");
-        option.textContent = texto;
-        option.disabled = true;
-        select.appendChild(option);
-
-        actualizarContador(select, "🏌️ Team 22");
-    }
-
-    // AGUILAS
-    if(data.equipo === "Aguilas"){
-        const select = document.querySelectorAll(".bloqueado")[1];
-        const option = document.createElement("option");
-        option.textContent = texto;
-        option.disabled = true;
-        select.appendChild(option);
-
-        actualizarContador(select, "🦅 Águilas");
-    }
-
-    animarAlta();
-});
+// actualizar cada 2 segundos
+setInterval(cargarParticipantes, 2000);
 
 // compartir
 function compartir(){
     window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
 }
 
-function actualizarContador(select, titulo){
-    const cantidad = select.options.length - 1;
-
-    select.options[0].textContent =
-        `${titulo} (${cantidad}) Tocar para ver`;
-}
-
-function animarAlta(){
-    const div = document.createElement("div");
-    div.textContent = "✅ Jugador agregado";
-    div.style.position = "fixed";
-    div.style.bottom = "20px";
-    div.style.left = "50%";
-    div.style.transform = "translateX(-50%)";
-    div.style.background = "#1f7a3f";
-    div.style.color = "white";
-    div.style.padding = "10px 20px";
-    div.style.borderRadius = "10px";
-    div.style.zIndex = "9999";
-
-    document.body.appendChild(div);
-
-    setTimeout(()=>div.remove(), 1500);
-}
-
-// bloquear solo listas
+// bloquear selects
 document.querySelectorAll(".bloqueado").forEach(select => {
     select.addEventListener("change", function(){
         this.selectedIndex = 0;
     });
 });
+
 </script>
 
 </body>
