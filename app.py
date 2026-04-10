@@ -7,7 +7,7 @@ from openpyxl import Workbook
 app = Flask(__name__)
 
 app.secret_key = "super_secret_key"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "12345")  # fallback seguro
 
 # 📁 RUTAS
 BASE_PATH = "/var/data"
@@ -28,9 +28,9 @@ class Participante(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     apellido = db.Column(db.String(100), nullable=False)
-    matricula = db.Column(db.String(50))
     asistencia = db.Column(db.String(100))
     equipo = db.Column(db.String(50))
+
 
 class Config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,10 +42,12 @@ class Config(db.Model):
     menu_activo = db.Column(db.Boolean, default=True)
     whatsapp_activo = db.Column(db.Boolean, default=True)
 
+
 class Handicap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    hdcp = db.Column(db.String(10), nullable=False)
+    nombre = db.Column(db.String(100))
+    hdcp = db.Column(db.String(10))
+
 
 with app.app_context():
     db.create_all()
@@ -54,13 +56,13 @@ with app.app_context():
         db.session.commit()
 
 # =========================
-# VALIDACIONES
+# VALIDACIÓN
 # =========================
 def solo_letras(t):
     return re.match(r"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$", t)
 
 # =========================
-# API PARTICIPANTES
+# PARTICIPANTES API
 # =========================
 @app.route("/participantes")
 def participantes():
@@ -74,7 +76,7 @@ def participantes():
     ])
 
 # =========================
-# AGREGAR
+# AGREGAR PARTICIPANTE
 # =========================
 @app.route("/agregar", methods=["POST"])
 def agregar():
@@ -86,20 +88,21 @@ def agregar():
     equipo = request.form.get("equipo")
 
     if not equipo:
-        return "Seleccioná un equipo", 400
+        return "Seleccioná equipo", 400
+
     if config and config.menu_activo and not asistencia:
-        return "Seleccioná un horario", 400
-    if not solo_letras(nombre):
+        return "Seleccioná horario", 400
+
+    if not solo_letras(nombre) or not solo_letras(apellido):
         return "Nombre inválido", 400
-    if not solo_letras(apellido):
-        return "Apellido inválido", 400
+
     if Participante.query.filter_by(nombre=nombre, apellido=apellido).first():
         return "Ya anotado", 400
 
     db.session.add(Participante(
         nombre=nombre,
         apellido=apellido,
-        asistencia=asistencia if asistencia else "",
+        asistencia=asistencia or "",
         equipo=equipo
     ))
     db.session.commit()
@@ -107,7 +110,7 @@ def agregar():
     return redirect("/")
 
 # =========================
-# ADMIN
+# ADMIN LOGIN
 # =========================
 @app.route("/admin", methods=["POST"])
 def admin_login():
@@ -125,21 +128,22 @@ def logout():
     return redirect("/")
 
 # =========================
-# HOME (🔥 FIX CLAVE ACÁ)
+# HOME (FIX MENÚ)
 # =========================
 @app.route("/")
 def index():
     config = Config.query.first()
 
-    # ✅ FIX SEGURO (evita NoneType crash)
     menu_opciones = []
     if config and config.opciones_menu:
-        menu_opciones = [x.strip() for x in config.opciones_menu.split(",") if x.strip()]
+        menu_opciones = [
+            x.strip() for x in config.opciones_menu.split(",") if x.strip()
+        ]
 
     return render_template(
         "index.html",
-        participantes=Participante.query.order_by(Participante.nombre.asc()).all(),
-        handicaps=Handicap.query.order_by(Handicap.nombre.asc()).all(),
+        participantes=Participante.query.all(),
+        handicaps=Handicap.query.all(),
         menu_opciones=menu_opciones,
         menu_activo=config.menu_activo if config else True,
         admin=session.get("admin", False),
@@ -148,7 +152,7 @@ def index():
     )
 
 # =========================
-# UPDATE CONFIG (FIX TAMBIÉN ACÁ)
+# CONFIG UPDATE
 # =========================
 @app.route("/update_config", methods=["POST"])
 def update_config():
@@ -162,14 +166,45 @@ def update_config():
     config.subtitulo2 = request.form.get("subtitulo2") or config.subtitulo2
     config.subtitulo3 = request.form.get("subtitulo3") or config.subtitulo3
 
-    # 🔥 FIX IMPORTANTE
-    config.opciones_menu = request.form.get("opciones_menu") or "8:00 AM,9:00 AM,10:00 AM"
+    config.opciones_menu = request.form.get("opciones_menu") or config.opciones_menu
 
-    config.menu_activo = True if request.form.get("menu_activo") == "on" else False
-    config.whatsapp_activo = True if request.form.get("whatsapp_activo") == "on" else False
+    config.menu_activo = "menu_activo" in request.form
+    config.whatsapp_activo = "whatsapp_activo" in request.form
 
     db.session.commit()
     return redirect("/")
+
+# =========================
+# RESET
+# =========================
+@app.route("/reset")
+def reset():
+    if not session.get("admin"):
+        return "No autorizado", 403
+
+    Participante.query.delete()
+    db.session.commit()
+    return redirect("/")
+
+# =========================
+# EXPORT EXCEL
+# =========================
+@app.route("/export")
+def export():
+    if not session.get("admin"):
+        return "No autorizado", 403
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Nombre", "Apellido", "Equipo", "Horario"])
+
+    for p in Participante.query.all():
+        ws.append([p.nombre, p.apellido, p.equipo, p.asistencia])
+
+    path = os.path.join(BASE_PATH, "participantes.xlsx")
+    wb.save(path)
+
+    return send_file(path, as_attachment=True)
 
 # =========================
 # FONDO
@@ -180,7 +215,7 @@ def upload_bg():
         return "No autorizado", 403
 
     file = request.files.get("imagen")
-    if file and file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
+    if file:
         file.save(os.path.join(UPLOAD_FOLDER, "fondo.jpg"))
 
     return redirect("/")
