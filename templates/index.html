@@ -230,7 +230,22 @@ cargarParticipantes();
 setInterval(cargarParticipantes, 2000);
 
 function compartir(){
-    window.open("https://wa.me/?text="+encodeURIComponent(window.location.href));
+
+    let texto = `
+🏌️ *{{ config.titulo }}*
+
+{{ config.subtitulo }}
+
+{{ config.subtitulo2 }}
+
+📲 Anotate acá:
+${window.location.href}
+`;
+
+    window.open(
+        "https://wa.me/?text=" + encodeURIComponent(texto),
+        "_blank"
+    );
 }
 
 document.querySelectorAll(".bloqueado").forEach(select => {
