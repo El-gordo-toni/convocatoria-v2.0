@@ -77,6 +77,23 @@ tr:nth-child(even) {
     background:#f2f2f2;
 }
 
+    .listas-flex {
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+}
+
+.lista-box {
+    flex:1;
+}
+
+/* 📱 celular */
+@media(max-width:700px){
+    .listas-flex{
+        flex-direction:column;
+    }
+}
+
 </style>
 </head>
 
@@ -128,7 +145,10 @@ tr:nth-child(even) {
 {% endif %}
 
 <!-- LISTAS -->
-<div class="card">
+<div class="listas-flex">
+
+<!-- TEAM 22 -->
+<div class="card lista-box">
 <h3>🏌️ Team 22 (<span id="countTeam22">0</span>)</h3>
 
 <table>
@@ -138,12 +158,15 @@ tr:nth-child(even) {
     <th>Nombre</th>
 </tr>
 </thead>
+
 <tbody id="tablaTeam22">
 </tbody>
+
 </table>
 </div>
 
-<div class="card">
+<!-- AGUILAS -->
+<div class="card lista-box">
 <h3>🦅 Águilas (<span id="countAguilas">0</span>)</h3>
 
 <table>
@@ -153,9 +176,13 @@ tr:nth-child(even) {
     <th>Nombre</th>
 </tr>
 </thead>
+
 <tbody id="tablaAguilas">
 </tbody>
+
 </table>
+</div>
+
 </div>
 
 <div class="card">
