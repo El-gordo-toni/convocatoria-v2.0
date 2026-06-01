@@ -55,6 +55,28 @@ button{
 .admin-card{ border:2px solid #1f7a3f; }
 
 a { text-decoration:none; }
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+th, td {
+    padding:8px;
+    border-bottom:1px solid #ddd;
+    text-align:left;
+}
+
+th {
+    background:#1f7a3f;
+    color:white;
+}
+
+tr:nth-child(even) {
+    background:#f2f2f2;
+}
+
 </style>
 </head>
 
@@ -107,15 +129,33 @@ a { text-decoration:none; }
 
 <!-- LISTAS -->
 <div class="card">
-<select class="bloqueado" id="team22">
-<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>
-</select>
+<h3>🏌️ Team 22 (<span id="countTeam22">0</span>)</h3>
+
+<table>
+<thead>
+<tr>
+    <th>#</th>
+    <th>Nombre</th>
+</tr>
+</thead>
+<tbody id="tablaTeam22">
+</tbody>
+</table>
 </div>
 
 <div class="card">
-<select class="bloqueado" id="aguilas">
-<option disabled selected>🦅 Águilas (...) Tocar para ver</option>
-</select>
+<h3>🦅 Águilas (<span id="countAguilas">0</span>)</h3>
+
+<table>
+<thead>
+<tr>
+    <th>#</th>
+    <th>Nombre</th>
+</tr>
+</thead>
+<tbody id="tablaAguilas">
+</tbody>
+</table>
 </div>
 
 <div class="card">
@@ -196,33 +236,41 @@ function cargarParticipantes(){
         .then(res => res.json())
         .then(data => {
 
-            const team22 = document.getElementById("team22");
-            const aguilas = document.getElementById("aguilas");
+            const tablaTeam22 = document.getElementById("tablaTeam22");
+            const tablaAguilas = document.getElementById("tablaAguilas");
+            const countTeam22 = document.getElementById("countTeam22");
+            const countAguilas = document.getElementById("countAguilas");
 
-            team22.innerHTML = '<option disabled selected>🏌️ Team 22 (...) Tocar para ver</option>';
-            aguilas.innerHTML = '<option disabled selected>🦅 Águilas (...) Tocar para ver</option>';
+            tablaTeam22.innerHTML = "";
+            tablaAguilas.innerHTML = "";
 
             let c1 = 0;
             let c2 = 0;
 
             data.forEach(p => {
-                const option = document.createElement("option");
-                option.textContent = p.nombre + " " + p.apellido;
-                option.disabled = true;
-
                 if(p.equipo === "Team 22"){
-                    team22.appendChild(option);
                     c1++;
+                    tablaTeam22.innerHTML += `
+                        <tr>
+                            <td>${c1}</td>
+                            <td>${p.nombre} ${p.apellido}</td>
+                        </tr>
+                    `;
                 }
 
                 if(p.equipo === "Aguilas"){
-                    aguilas.appendChild(option);
                     c2++;
+                    tablaAguilas.innerHTML += `
+                        <tr>
+                            <td>${c2}</td>
+                            <td>${p.nombre} ${p.apellido}</td>
+                        </tr>
+                    `;
                 }
             });
 
-            team22.options[0].textContent = `🏌️ Team 22 (${c1}) Tocar para ver`;
-            aguilas.options[0].textContent = `🦅 Águilas (${c2}) Tocar para ver`;
+            countTeam22.textContent = c1;
+            countAguilas.textContent = c2;
         });
 }
 
