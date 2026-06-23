@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin:0;
+    font-family:Arial;
+    color:white;
+    background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}") center/cover fixed;
+}
+
+.overlay {
+    background:rgba(0,0,0,0.7);
+    min-height:100vh;
+    padding:20px;
+}
+
+.container {
+    display:flex;
+    gap:20px;
+    max-width:1200px;
+    margin:auto;
+}
+
+.left,.right {
+    flex:1;
+}
+
+.card {
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:15px;
+    position:relative;
+}
+
+input, select {
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+    width:100%;
+    box-sizing:border-box;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#1f7a3f;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.btn-delete {
+    background:red;
+    width:auto;
+    padding:6px 10px;
+    position:absolute;
+    right:10px;
+    top:10px;
+}
+
+.admin-card {
+    border:2px solid #1f7a3f;
+}
+
+#toast {
+    display:none;
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#1f7a3f;
+    color:white;
+    padding:12px 20px;
+    border-radius:8px;
+    font-weight:bold;
+    z-index:9999;
+}
+
+@media(max-width:768px){
+    .container {
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="overlay">
+
+<h1 style="text-align:center;">{{ config.titulo }}</h1>
+
+{% if config.subtitulo %}
+<p style="text-align:center;">{{ config.subtitulo }}</p>
+{% endif %}
+
+{% if config.subtitulo2 %}
+<p style="text-align:center;">{{ config.subtitulo2 }}</p>
+{% endif %}
+
+{% if config.subtitulo3 %}
+<p style="text-align:center;">{{ config.subtitulo3 }}</p>
+{% endif %}
+
+<div class="container">
+
+<div class="left">
+
+<div class="card">
+<form id="formAgregar">
+
+<input name="nombre" placeholder="Nombre" required>
+<input name="apellido" placeholder="Apellido" required>
+<input name="dni_matricula" placeholder="DNI o Matrícula" required>
+
+<select name="equipo" required>
+    <option value="" disabled selected>Elegir equipo</option>
+    <option value="Team 22">🔵 Team 22</option>
+    <option value="Águilas">🦅 Águilas</option>
+    <option value="Invitado">👤 Invitado</option>
+</select>
+
+{% if menu_activo %}
+<label>Menú</label>
+<select name="asistencia" required>
+    <option value="" disabled selected>Seleccionar opción</option>
+    {% for op in menu_opciones %}
+    <option value="{{ op }}">{{ op }}</option>
+    {% endfor %}
+</select>
+{% endif %}
+
+<button>Anotarme</button>
+
+</form>
+</div>
+
+{% if config.whatsapp_activo %}
+<div class="card">
+<button onclick="compartir()">📲 Compartir por WhatsApp</button>
+</div>
+{% endif %}
+
+{% if admin %}
+<div class="card admin-card">
+
+<h3>Panel Admin</h3>
+
+<form method="POST" action="/update_config">
+<input name="titulo" value="{{ config.titulo }}" placeholder="Título">
+<input name="subtitulo" value="{{ config.subtitulo }}" placeholder="Subtítulo 1">
+<input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
+<input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
+
+<label>Opciones de menú separadas por coma</label>
+<input name="opciones_menu" value="{{ config.opciones_menu }}">
+
+<label>
+<input type="checkbox" name="menu_activo" {% if config.menu_activo %}checked{% endif %}>
+ Activar menú
+</label>
+
+<br><br>
+
+<label>
+<input type="checkbox" name="whatsapp_activo" {% if config.whatsapp_activo %}checked{% endif %}>
+ Activar botón WhatsApp
+</label>
+
+<br><br>
+
+<button>Guardar configuración</button>
+</form>
+
+<hr>
+
+<form method="POST" action="/upload_bg" enctype="multipart/form-data">
+<label>Subir fondo</label>
+<input type="file" name="imagen" accept="image/*">
+<button>Subir fondo</button>
+</form>
+
+<hr>
+
+<form method="POST" action="/upload_hdcp" enctype="multipart/form-data">
+<label>Subir Excel Handicap</label>
+<input type="file" name="file" accept=".xlsx">
+<button>Subir Excel</button>
+</form>
+
+<hr>
+
+<a href="/reset" onclick="return confirm('¿Seguro que querés resetear la lista?')">Resetear lista</a><br><br>
+<a href="/export">Exportar Excel</a><br><br>
+<a href="/logout">Salir</a>
+
+</div>
+{% endif %}
+
+<div class="card">
+<select style="width:100%; padding:12px;" onchange="this.selectedIndex=0;">
+    <option selected disabled>
+        👥 Ver jugadores y handicap ({{ handicaps|length }})
+    </option>
+
+    {% for h in handicaps %}
+    <option>
+        {{ h.nombre }} (HCP {{ h.hdcp }})
+    </option>
+    {% endfor %}
+</select>
+</div>
+
+</div>
+
+<div class="right">
+
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+    <div style="flex:1; min-width:220px;">
+        <h3>🔵 Team 22 <span id="contadorTeam22"></span></h3>
+        <div id="listaTeam22"></div>
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+        <h3>🦅 Águilas <span id="contadorAguilas"></span></h3>
+        <div id="listaAguilas"></div>
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+        <h3>👤 Invitados <span id="contadorInvitados"></span></h3>
+        <div id="listaInvitados"></div>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+const socket = io();
+const form = document.getElementById("formAgregar");
+const toast = document.getElementById("toast");
+const ADMIN = {{ 'true' if admin else 'false' }};
+
+function mostrarToast(msg, ok=true){
+    toast.innerText = msg;
+    toast.style.background = ok ? "#1f7a3f" : "#b00020";
+    toast.style.display = "block";
+
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 2500);
+}
+
+function compartir(){
+    let url = window.location.href;
+    let texto = "🏌️ Sumate al Torneo Matungo!\n\nAnotate acá:\n" + url;
+    let link = "https://wa.me/?text=" + encodeURIComponent(texto);
+    window.open(link, "_blank");
+}
+
+function renderParticipantes(data){
+    const listaTeam22 = document.getElementById("listaTeam22");
+    const listaAguilas = document.getElementById("listaAguilas");
+    const listaInvitados = document.getElementById("listaInvitados");
+
+    const contadorTeam22 = document.getElementById("contadorTeam22");
+    const contadorAguilas = document.getElementById("contadorAguilas");
+    const contadorInvitados = document.getElementById("contadorInvitados");
+
+    listaTeam22.innerHTML = "";
+    listaAguilas.innerHTML = "";
+    listaInvitados.innerHTML = "";
+
+    let totalTeam22 = 0;
+    let totalAguilas = 0;
+    let totalInvitados = 0;
+
+    data.forEach(p => {
+        let div = document.createElement("div");
+        div.className = "card jugador-card";
+        div.dataset.id = p.id;
+
+        let html = `${p.nombre} ${p.apellido}`;
+
+        if (ADMIN) {
+            html += `<button class="btn-delete" onclick="borrarJugador(${p.id})">❌</button>`;
+        }
+
+        div.innerHTML = html;
+
+        if (p.equipo === "Team 22") {
+            listaTeam22.appendChild(div);
+            totalTeam22++;
+        } else if (p.equipo === "Águilas") {
+            listaAguilas.appendChild(div);
+            totalAguilas++;
+        } else if (p.equipo === "Invitado") {
+            listaInvitados.appendChild(div);
+            totalInvitados++;
+        }
+    });
+
+    contadorTeam22.innerText = "(" + totalTeam22 + ")";
+    contadorAguilas.innerText = "(" + totalAguilas + ")";
+    contadorInvitados.innerText = "(" + totalInvitados + ")";
+}
+
+function cargarParticipantes(){
+    fetch("/participantes")
+    .then(res => res.json())
+    .then(data => renderParticipantes(data));
+}
+
+form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    let formData = new FormData(form);
+
+    fetch("/agregar", {
+        method: "POST",
+        body: formData
+    })
+    .then(async res => {
+        let data = await res.json();
+
+        if (!res.ok || !data.ok) {
+            mostrarToast("⚠️ " + data.msg, false);
+            return;
+        }
+
+        form.reset();
+        mostrarToast("✅ " + data.msg);
+    })
+    .catch(() => {
+        mostrarToast("⚠️ Error al guardar", false);
+    });
+});
+
+function borrarJugador(id){
+    if (!confirm("¿Borrar jugador?")) return;
+
+    fetch("/delete/" + id, {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            mostrarToast("Jugador borrado");
+        }
+    });
+}
+
+socket.on("actualizar_lista", function(){
+    cargarParticipantes();
+});
+
+cargarParticipantes();
+</script>
+
+</body>
+</html>
