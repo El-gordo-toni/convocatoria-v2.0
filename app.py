@@ -80,8 +80,8 @@ with app.app_context():
         db.session.commit()
 
 
-def solo_dni_matricula(t):
-    return re.match(r"^[A-Za-z0-9\-\/ ]+$", t or "")
+def validar_dni(t):
+    return re.match(r"^\d{1,8}$", t or "")
 
 
 def solo_letras(t):
@@ -153,8 +153,8 @@ def agregar():
     if not dni_matricula:
         return jsonify({"ok": False, "msg": "Debe ingresar DNI o matrícula"}), 400
 
-    if not solo_dni_matricula(dni_matricula):
-        return jsonify({"ok": False, "msg": "DNI o matrícula inválido"}), 400
+    if not validar_dni(dni_matricula):
+        return jsonify({"ok": False, "msg": "El DNI debe contener solo números y hasta 8 dígitos"}), 400
 
     if Participante.query.filter_by(nombre=nombre, apellido=apellido).first():
         return jsonify({"ok": False, "msg": "Ya está anotado"}), 400
