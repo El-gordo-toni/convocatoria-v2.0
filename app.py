@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_file, jsonify
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 import os
@@ -45,6 +46,7 @@ class Config(db.Model):
     subtitulo3 = db.Column(db.String(200), default="")
     opciones_menu = db.Column(db.Text, default="8:00 AM,9:00 AM,10:00 AM")
     menu_activo = db.Column(db.Boolean, default=True)
+    cierre_inscripcion = db.Column(db.String(30), default="")
     whatsapp_activo = db.Column(db.Boolean, default=True)
 
 
@@ -70,7 +72,8 @@ with app.app_context():
     migrar_columna("config", "opciones_menu", "TEXT DEFAULT '8:00 AM,9:00 AM,10:00 AM'")
     migrar_columna("config", "menu_activo", "BOOLEAN DEFAULT 1")
     migrar_columna("config", "whatsapp_activo", "BOOLEAN DEFAULT 1")
-
+    migrar_columna("config", "cierre_inscripcion", "VARCHAR(30) DEFAULT ''")
+    
     migrar_columna("participante", "asistencia", "VARCHAR(100)")
     migrar_columna("participante", "equipo", "VARCHAR(50)")
     migrar_columna("participante", "dni_matricula", "VARCHAR(50)")
@@ -94,6 +97,15 @@ def participantes_ordenados():
         Participante.nombre.asc()
     ).all()
 
+def inscripcion_cerrada(config):
+    if not config.cierre_inscripcion:
+        return False
+
+    try:
+        cierre = datetime.fromisoformat(config.cierre_inscripcion)
+        return datetime.now() >= cierre
+    except:
+        return False
 
 @app.route("/")
 def index():
