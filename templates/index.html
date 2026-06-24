@@ -97,6 +97,14 @@ button {
 
 <h1 style="text-align:center;">{{ config.titulo }}</h1>
 
+{% if config.cierre_inscripcion %}
+<div style="background:#111; color:white; padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+    ⏳ Inscripción abierta por:
+    <br>
+    <strong id="contadorCierre" style="font-size:22px;"></strong>
+</div>
+{% endif %}    
+    
 {% if config.subtitulo %}
 <p style="text-align:center;">{{ config.subtitulo }}</p>
 {% endif %}
@@ -143,7 +151,9 @@ button {
 </select>
 {% endif %}
 
-<button>Anotarme</button>
+<button id="btnAnotarme" {% if inscripcion_cerrada %}disabled{% endif %}>
+    {% if inscripcion_cerrada %}Inscripción cerrada{% else %}Anotarme{% endif %}
+</button>
 
 </form>
 </div>
@@ -164,7 +174,9 @@ button {
 <input name="subtitulo" value="{{ config.subtitulo }}" placeholder="Subtítulo 1">
 <input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
 <input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
-
+<label>Fecha y hora de cierre de inscripción</label>
+<input type="datetime-local" name="cierre_inscripcion" value="{{ config.cierre_inscripcion }}">
+    
 <label>Opciones de menú separadas por coma</label>
 <input name="opciones_menu" value="{{ config.opciones_menu }}">
 
@@ -252,6 +264,15 @@ button {
 </div>
 </div>
 
+    <div id="modalGracias" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center; text-align:center; padding:20px;">
+    <div style="background:white; color:black; padding:35px; border-radius:18px; max-width:500px; width:100%;">
+        <h1>✅ ¡Gracias!</h1>
+        <h2 id="graciasNombre"></h2>
+        <p id="graciasCopa" style="font-size:20px; font-weight:bold;"></p>
+        <button onclick="cerrarGracias()">Cerrar</button>
+    </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -262,6 +283,52 @@ const form = document.getElementById("formAgregar");
 const toast = document.getElementById("toast");
 const ADMIN = {{ 'true' if admin else 'false' }};
 
+const cierreInscripcion = "{{ config.cierre_inscripcion }}";
+const btnAnotarme = document.getElementById("btnAnotarme");
+
+function mostrarGracias(nombre, copa){
+    document.getElementById("graciasNombre").innerText = nombre;
+    document.getElementById("graciasCopa").innerText = "Nos vemos en " + copa;
+    document.getElementById("modalGracias").style.display = "flex";
+}
+
+function cerrarGracias(){
+    document.getElementById("modalGracias").style.display = "none";
+}
+
+function actualizarContadorCierre(){
+    if (!cierreInscripcion) return;
+
+    const contador = document.getElementById("contadorCierre");
+    if (!contador) return;
+
+    const cierre = new Date(cierreInscripcion);
+    const ahora = new Date();
+    const diferencia = cierre - ahora;
+
+    if (diferencia <= 0) {
+        contador.innerText = "INSCRIPCIÓN CERRADA";
+
+        if (btnAnotarme) {
+            btnAnotarme.disabled = true;
+            btnAnotarme.innerText = "Inscripción cerrada";
+            btnAnotarme.style.background = "#777";
+        }
+
+        return;
+    }
+
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diferencia / (1000 * 60 * 60)) % 24);
+    const minutos = Math.floor((diferencia / (1000 * 60)) % 60);
+    const segundos = Math.floor((diferencia / 1000) % 60);
+
+    contador.innerText = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+}
+
+setInterval(actualizarContadorCierre, 1000);
+actualizarContadorCierre();
+    
 function mostrarToast(msg, ok=true){
     toast.innerText = msg;
     toast.style.background = ok ? "#1f7a3f" : "#b00020";
@@ -350,7 +417,7 @@ form.addEventListener("submit", function(e){
         }
 
         form.reset();
-        mostrarToast("✅ " + data.msg);
+        mostrarGracias(data.msg, data.copa);
     })
     .catch(() => {
         mostrarToast("⚠️ Error al guardar", false);
