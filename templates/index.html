@@ -97,8 +97,7 @@ button {
 
 <h1 style="text-align:center;">{{ config.titulo }}</h1>
 
-{% if config.cierre_inscripcion %}
-<div style="background:#111; color:white; padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+{% if config.cierre_inscripcion %}<div id="boxContador" style="background:#1f7a3f; color:white; padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
     ⏳ Inscripción abierta por:
     <br>
     <strong id="contadorCierre" style="font-size:22px;"></strong>
@@ -291,7 +290,7 @@ const btnAnotarme = document.getElementById("btnAnotarme");
 
 function mostrarGracias(nombre, copa){
     document.getElementById("graciasNombre").innerText = nombre;
-    document.getElementById("graciasCopa").innerText = "Nos vemos en " + copa;
+    document.getElementById("graciasCopa").innerText = "Nos vemos en {{ config.subtitulo2 }}";
     document.getElementById("modalGracias").style.display = "flex";
 }
 
@@ -311,6 +310,11 @@ function actualizarContadorCierre(){
 
     if (diferencia <= 0) {
         contador.innerText = "INSCRIPCIÓN CERRADA";
+    
+        const boxContador = document.getElementById("boxContador");
+        if (boxContador) {
+            boxContador.style.background = "#b00020";
+        }
 
         if (btnAnotarme) {
             btnAnotarme.disabled = true;
