@@ -150,8 +150,8 @@ button {
 </select>
 {% endif %}
 
-<button id="btnAnotarme" {% if inscripcion_cerrada %}disabled{% endif %}>
-    {% if inscripcion_cerrada %}Inscripción cerrada{% else %}Anotarme{% endif %}
+<button id="btnAnotarme">
+    Anotarme
 </button>
 
 </form>
@@ -308,6 +308,35 @@ function actualizarContadorCierre(){
     const ahora = new Date();
     const diferencia = cierre - ahora;
 
+    if (diferencia <= 0) {
+        contador.innerText = "INSCRIPCIÓN CERRADA";
+    
+        const boxContador = document.getElementById("boxContador");
+        if (boxContador) {
+            boxContador.style.background = "#b00020";
+        }
+    
+        if (btnAnotarme) {
+            btnAnotarme.disabled = true;
+            btnAnotarme.innerText = "Inscripción cerrada";
+            btnAnotarme.style.background = "#777";
+        }
+    
+        return;
+    }
+    
+    // abierto
+    const boxContador = document.getElementById("boxContador");
+    if (boxContador) {
+        boxContador.style.background = "#1f7a3f";
+    }
+    
+    if (btnAnotarme) {
+        btnAnotarme.disabled = false;
+        btnAnotarme.innerText = "Anotarme";
+        btnAnotarme.style.background = "#1f7a3f";
+    }
+    
     if (diferencia <= 0) {
         contador.innerText = "INSCRIPCIÓN CERRADA";
     
