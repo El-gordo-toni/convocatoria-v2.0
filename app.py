@@ -125,6 +125,7 @@ def index():
         menu_activo=config.menu_activo,
         admin=session.get("admin", False),
         bg_path=bg_path,
+        inscripcion_cerrada=inscripcion_cerrada(config),
         config=config
     )
 
@@ -153,6 +154,9 @@ def agregar():
     asistencia = request.form.get("asistencia", "").strip()
     equipo = request.form.get("equipo", "").strip()
 
+    if inscripcion_cerrada(config):
+    return jsonify({"ok": False, "msg": "La inscripción ya está cerrada"}), 400
+    
     if not equipo:
         return jsonify({"ok": False, "msg": "Falta elegir equipo"}), 400
 
@@ -186,7 +190,8 @@ def agregar():
 
     return jsonify({
         "ok": True,
-        "msg": f"{nombre} {apellido} quedó anotado en {equipo}"
+        "msg": f"Gracias {nombre} {apellido}",
+        "copa": config.titulo
     })
 
 
@@ -222,7 +227,8 @@ def update_config():
     config.opciones_menu = request.form.get("opciones_menu", "")
     config.menu_activo = bool(request.form.get("menu_activo"))
     config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
-
+    config.cierre_inscripcion = request.form.get("cierre_inscripcion", "")
+    
     db.session.commit()
     return redirect("/")
 
