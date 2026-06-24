@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_file, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 import os
@@ -98,13 +98,17 @@ def participantes_ordenados():
     ).all()
 
 
+def ahora_argentina():
+    return datetime.utcnow() - timedelta(hours=3)
+
+
 def inscripcion_cerrada(config):
     if not config.cierre_inscripcion:
         return False
 
     try:
         cierre = datetime.fromisoformat(config.cierre_inscripcion)
-        return datetime.now() >= cierre
+        return ahora_argentina() >= cierre
     except Exception:
         return False
 
@@ -226,7 +230,7 @@ def update_config():
     config.subtitulo = request.form.get("subtitulo", "")
     config.subtitulo2 = request.form.get("subtitulo2", "")
     config.subtitulo3 = request.form.get("subtitulo3", "")
-    config.cierre_inscripcion = request.form.get("cierre_inscripcion", "")
+    config.cierre_inscripcion = request.form.get("cierre_inscripcion", "").strip()
     config.opciones_menu = request.form.get("opciones_menu", "")
     config.menu_activo = bool(request.form.get("menu_activo"))
     config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
