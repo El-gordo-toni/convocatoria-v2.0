@@ -399,12 +399,18 @@ function renderParticipantes(data){
     let totalAguilas = 0;
     let totalInvitados = 0;
 
-    data.forEach(p => {
+    data
+    .sort((a, b) => {
+        let nombreA = (a.apellido + " " + a.nombre).toLowerCase();
+        let nombreB = (b.apellido + " " + b.nombre).toLowerCase();
+        return nombreA.localeCompare(nombreB);
+    })
+    .forEach(p => {
         let div = document.createElement("div");
         div.className = "card jugador-card";
         div.dataset.id = p.id;
 
-        let html = `${p.nombre} ${p.apellido}`;
+        let html = `${p.apellido}, ${p.nombre}`;
 
         if (ADMIN) {
             html += `<button class="btn-delete" onclick="borrarJugador(${p.id})">❌</button>`;
