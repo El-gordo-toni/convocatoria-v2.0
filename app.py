@@ -73,7 +73,7 @@ with app.app_context():
     migrar_columna("config", "menu_activo", "BOOLEAN DEFAULT 1")
     migrar_columna("config", "whatsapp_activo", "BOOLEAN DEFAULT 1")
     migrar_columna("config", "cierre_inscripcion", "VARCHAR(30) DEFAULT ''")
-    
+
     migrar_columna("participante", "asistencia", "VARCHAR(100)")
     migrar_columna("participante", "equipo", "VARCHAR(50)")
     migrar_columna("participante", "dni_matricula", "VARCHAR(50)")
@@ -97,6 +97,7 @@ def participantes_ordenados():
         Participante.nombre.asc()
     ).all()
 
+
 def inscripcion_cerrada(config):
     if not config.cierre_inscripcion:
         return False
@@ -104,8 +105,9 @@ def inscripcion_cerrada(config):
     try:
         cierre = datetime.fromisoformat(config.cierre_inscripcion)
         return datetime.now() >= cierre
-    except:
+    except Exception:
         return False
+
 
 @app.route("/")
 def index():
@@ -155,8 +157,8 @@ def agregar():
     equipo = request.form.get("equipo", "").strip()
 
     if inscripcion_cerrada(config):
-    return jsonify({"ok": False, "msg": "La inscripción ya está cerrada"}), 400
-    
+        return jsonify({"ok": False, "msg": "La inscripción ya está cerrada"}), 400
+
     if not equipo:
         return jsonify({"ok": False, "msg": "Falta elegir equipo"}), 400
 
@@ -167,7 +169,7 @@ def agregar():
         return jsonify({"ok": False, "msg": "Nombre o apellido inválido"}), 400
 
     if not dni_matricula:
-        return jsonify({"ok": False, "msg": "Debe ingresar DNI o matrícula"}), 400
+        return jsonify({"ok": False, "msg": "Debe ingresar DNI"}), 400
 
     if not validar_dni(dni_matricula):
         return jsonify({"ok": False, "msg": "El DNI debe contener solo números y hasta 8 dígitos"}), 400
@@ -224,12 +226,14 @@ def update_config():
     config.subtitulo = request.form.get("subtitulo", "")
     config.subtitulo2 = request.form.get("subtitulo2", "")
     config.subtitulo3 = request.form.get("subtitulo3", "")
+    config.cierre_inscripcion = request.form.get("cierre_inscripcion", "")
     config.opciones_menu = request.form.get("opciones_menu", "")
     config.menu_activo = bool(request.form.get("menu_activo"))
     config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
-    config.cierre_inscripcion = request.form.get("cierre_inscripcion", "")
-    
+
     db.session.commit()
+    socketio.emit("actualizar_lista")
+
     return redirect("/")
 
 
@@ -272,7 +276,7 @@ def export():
 
     def crear_hoja(nombre_hoja, participantes):
         ws = wb.create_sheet(title=nombre_hoja)
-        ws.append(["Nombre", "Apellido", "DNI/Matrícula", "Equipo", "Menú"])
+        ws.append(["Nombre", "Apellido", "DNI", "Equipo", "Menú"])
 
         for p in participantes:
             ws.append([
