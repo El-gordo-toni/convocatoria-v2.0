@@ -118,7 +118,13 @@ button {
 
 <input name="nombre" placeholder="Nombre" required>
 <input name="apellido" placeholder="Apellido" required>
-<input name="dni_matricula" placeholder="DNI o Matrícula" required>
+<input
+    name="dni_matricula"
+    placeholder="DNI"
+    required
+    maxlength="8"
+    inputmode="numeric"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <select name="equipo" required>
     <option value="" disabled selected>Elegir equipo</option>
