@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin:0;
+    font-family:Arial;
+    color:white;
+    background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}") center/cover fixed;
+}
+
+.modal-gracias {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    z-index:99999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+.modal-contenido {
+    background:white;
+    color:#222;
+    padding:35px 25px;
+    border-radius:20px;
+    max-width:480px;
+    width:100%;
+    box-shadow:0 15px 45px rgba(0,0,0,0.35);
+    animation:aparecerModal 0.35s ease;
+}
+
+.check-animado {
+    width:90px;
+    height:90px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    background:#25d366;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:55px;
+    font-weight:bold;
+    animation:checkEntrada 0.55s ease;
+}
+
+.check-animado span {
+    transform:translateY(-2px);
+}
+
+.modal-contenido h1 {
+    margin:0 0 10px;
+    font-size:28px;
+}
+
+.confirmacion {
+    font-size:17px;
+    margin-bottom:22px;
+    color:#444;
+}
+
+.resumen-inscripcion {
+    background:#f4f4f4;
+    border-radius:12px;
+    padding:5px 18px;
+    margin-bottom:20px;
+    text-align:left;
+}
+
+.dato-confirmacion {
+    padding:14px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.dato-confirmacion:last-child {
+    border-bottom:none;
+}
+
+.dato-titulo {
+    display:block;
+    font-size:13px;
+    color:#666;
+    margin-bottom:4px;
+}
+
+.dato-confirmacion strong {
+    font-size:18px;
+}
+
+.mensaje-evento {
+    font-size:19px;
+    font-weight:bold;
+    color:#1f7a3f;
+    margin:20px 0 10px;
+}
+
+.mensaje-final {
+    margin-bottom:22px;
+}
+
+@keyframes checkEntrada {
+    0% {
+        transform:scale(0);
+        opacity:0;
+    }
+
+    65% {
+        transform:scale(1.15);
+        opacity:1;
+    }
+
+    100% {
+        transform:scale(1);
+    }
+}
+
+@keyframes aparecerModal {
+    from {
+        opacity:0;
+        transform:translateY(25px) scale(0.95);
+    }
+
+    to {
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+.overlay {
+    background:rgba(0,0,0,0.7);
+    min-height:100vh;
+    padding:20px;
+}
+
+.container {
+    display:flex;
+    gap:20px;
+    max-width:1200px;
+    margin:auto;
+}
+
+.left,.right {
+    flex:1;
+}
+
+.card {
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:15px;
+    position:relative;
+}
+
+input, select {
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+    width:100%;
+    box-sizing:border-box;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#1f7a3f;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.btn-delete {
+    background:red;
+    width:auto;
+    padding:6px 10px;
+    position:absolute;
+    right:10px;
+    top:10px;
+}
+
+.admin-card {
+    border:2px solid #1f7a3f;
+}
+
+.botones-whatsapp-admin {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:15px 0;
+}
+
+.botones-whatsapp-admin button {
+    flex:1;
+    min-width:220px;
+}
+
+.btn-copiar-whatsapp {
+    background:#1f7a3f;
+}
+
+.btn-abrir-whatsapp {
+    background:#25d366;
+    color:#102b18;
+}
+
+#toast {
+    display:none;
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#1f7a3f;
+    color:white;
+    padding:12px 20px;
+    border-radius:8px;
+    font-weight:bold;
+    z-index:9999;
+}
+
+@media(max-width:768px){
+    .container {
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="overlay">
+
+{% for mensaje in get_flashed_messages() %}
+<div class="card" style="border:2px solid #1f7a3f;">
+    {{ mensaje }}
+</div>
+{% endfor %}
+
+<h1 style="text-align:center;">{{ config.titulo }}</h1>
+
+{% if config.cierre_inscripcion %}<div id="boxContador" style="background:#1f7a3f; color:white; padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+    ⏳ Inscripción abierta por:
+    <br>
+    <strong id="contadorCierre" style="font-size:22px;"></strong>
+</div>
+{% endif %}    
+    
+{% if config.subtitulo %}
+<p style="text-align:center;">{{ config.subtitulo }}</p>
+{% endif %}
+
+{% if config.subtitulo2 %}
+<p style="text-align:center;">{{ config.subtitulo2 }}</p>
+{% endif %}
+
+{% if config.subtitulo3 %}
+<p style="text-align:center;">{{ config.subtitulo3 }}</p>
+{% endif %}
+
+<div class="container">
+
+<div class="left">
+
+<div class="card">
+<form id="formAgregar">
+
+<input name="nombre" placeholder="Nombre" required>
+<input name="apellido" placeholder="Apellido" required>
+<input
+    name="dni_matricula"
+    placeholder="DNI"
+    required
+    maxlength="8"
+    inputmode="numeric"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+
+<input
+    name="matricula"
+    placeholder="Matrícula (opcional)"
+    maxlength="50">
+
+<select name="equipo" required>
+    <option value="" disabled selected>Elegir equipo</option>
+    <option value="Team 22">🔵 Team 22</option>
+    <option value="Águilas">🦅 Águilas</option>
+    <option value="Invitado">👤 Invitado</option>
+</select>
+
+{% if menu_activo %}
+<label>Menú</label>
+<select name="asistencia" required>
+    <option value="" disabled selected>Seleccionar opción</option>
+    {% for op in menu_opciones %}
+    <option value="{{ op }}">{{ op }}</option>
+    {% endfor %}
+</select>
+{% endif %}
+
+<button id="btnAnotarme">
+    Anotarme
+</button>
+
+</form>
+</div>
+
+{% if config.whatsapp_activo %}
+<div class="card">
+<button onclick="compartir()">📲 Compartir por WhatsApp</button>
+</div>
+{% endif %}
+
+{% if admin %}
+<div class="card admin-card">
+
+<h3>Panel Admin</h3>
+
+<form method="POST" action="/update_config">
+<input name="titulo" value="{{ config.titulo }}" placeholder="Título">
+<input name="subtitulo" value="{{ config.subtitulo }}" placeholder="Subtítulo 1">
+<input name="subtitulo2" value="{{ config.subtitulo2 }}" placeholder="Subtítulo 2">
+<input name="subtitulo3" value="{{ config.subtitulo3 }}" placeholder="Subtítulo 3">
+<label>Fecha y hora de cierre de inscripción</label>
+<input
+    type="datetime-local"
+    name="cierre_inscripcion"
+    value="{{ config.cierre_inscripcion }}">
+    
+<label>Opciones de menú separadas por coma</label>
+<input name="opciones_menu" value="{{ config.opciones_menu }}">
+
+<label>
+<input type="checkbox" name="menu_activo" {% if config.menu_activo %}checked{% endif %}>
+ Activar menú
+</label>
+
+<br><br>
+
+<label>
+<input type="checkbox" name="whatsapp_activo" {% if config.whatsapp_activo %}checked{% endif %}>
+ Activar botón WhatsApp
+</label>
+
+<hr>
+
+<h3>Historial de movimientos</h3>
+
+<a href="/export_historial">Descargar historial Excel</a>
+
+<br><br>
+
+<div
+    id="listaRegistros"
+    style="max-height:400px; overflow-y:auto;"
+>
+</div>
+
+<br><br>
+
+<button>Guardar configuración</button>
+</form>
+
+<hr>
+
+<form method="POST" action="/upload_bg" enctype="multipart/form-data">
+<label>Subir fondo</label>
+<input type="file" name="imagen" accept="image/*">
+<button>Subir fondo</button>
+</form>
+
+<hr>
+
+<form method="POST" action="/upload_hdcp" enctype="multipart/form-data">
+<label>Subir Excel Handicap</label>
+<input type="file" name="file" accept=".xlsx">
+<button>Subir Excel</button>
+</form>
+
+<hr>
+
+<a href="/reset" onclick="return confirm('¿Seguro que querés resetear la lista?')">
+    Resetear lista
+</a>
+
+<br><br>
+
+<a href="/export">Exportar Excel</a>
+
+<div class="botones-whatsapp-admin">
+    <button
+        type="button"
+        class="btn-copiar-whatsapp"
+        onclick="copiarListaWhatsApp()">
+        📋 Copiar lista para WhatsApp
+    </button>
+
+    <button
+        type="button"
+        class="btn-abrir-whatsapp"
+        onclick="abrirListaWhatsApp()">
+        📲 Abrir WhatsApp con la lista
+    </button>
+</div>
+
+<a href="/logout">Salir</a>
+
+</div>
+{% endif %}
+
+<div class="card">
+<select style="width:100%; padding:12px;" onchange="this.selectedIndex=0;">
+    <option selected disabled>
+        👥 Ver jugadores y handicap ({{ handicaps|length }})
+    </option>
+
+    {% for h in handicaps %}
+    <option>
+        {{ h.nombre }} (HCP {{ h.hdcp }})
+    </option>
+    {% endfor %}
+</select>
+</div>
+
+</div>
+
+<div class="right">
+
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+    <div style="flex:1; min-width:220px;">
+        <h3>🔵 Team 22 <span id="contadorTeam22"></span></h3>
+        <div id="listaTeam22"></div>
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+        <h3>🦅 Águilas <span id="contadorAguilas"></span></h3>
+        <div id="listaAguilas"></div>
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+        <h3>👤 Invitados <span id="contadorInvitados"></span></h3>
+        <div id="listaInvitados"></div>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+    <div id="modalGracias" class="modal-gracias">
+        <div class="modal-contenido">
+
+            <div class="check-animado">
+                <span>✓</span>
+            </div>
+
+            <h1 id="graciasNombre">¡Gracias!</h1>
+
+            <p class="confirmacion">
+                Tu inscripción fue registrada correctamente.
+            </p>
+
+            <div class="resumen-inscripcion">
+
+                <div class="dato-confirmacion">
+                    <span class="dato-titulo">Equipo</span>
+                    <strong id="graciasEquipo"></strong>
+                </div>
+
+                <div class="dato-confirmacion" id="bloqueMenuGracias">
+                    <span class="dato-titulo">Menú</span>
+                    <strong id="graciasMenu"></strong>
+                </div>
+
+            </div>
+
+            <p id="graciasEvento" class="mensaje-evento"></p>
+
+            <p class="mensaje-final">
+                ¡Gracias por participar!
+            </p>
+
+            <button type="button" onclick="cerrarGracias()">
+                Cerrar
+            </button>
+
+        </div>
+    </div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+const socket = io();
+const form = document.getElementById("formAgregar");
+const toast = document.getElementById("toast");
+const ADMIN = {{ 'true' if admin else 'false' }};
+
+const cierreInscripcion = "{{ config.cierre_inscripcion }}";
+const btnAnotarme = document.getElementById("btnAnotarme");
+
+function mostrarGracias(data){
+    const nombre = data.nombre_completo || "";
+    const equipo = data.equipo || "";
+    const menu = data.menu || "";
+    const mensajeEvento = data.mensaje_evento || "";
+
+    document.getElementById("graciasNombre").innerText =
+        "¡Gracias " + nombre + "!";
+
+    let textoEquipo = equipo;
+
+    if (equipo === "Team 22") {
+        textoEquipo = "🔵 Team 22";
+    } else if (equipo === "Águilas") {
+        textoEquipo = "🦅 Águilas";
+    } else if (equipo === "Invitado") {
+        textoEquipo = "👤 Invitado";
+    }
+
+    document.getElementById("graciasEquipo").innerText = textoEquipo;
+
+    const bloqueMenu = document.getElementById("bloqueMenuGracias");
+
+    if (menu) {
+        document.getElementById("graciasMenu").innerText = "🍽️ " + menu;
+        bloqueMenu.style.display = "block";
+    } else {
+        bloqueMenu.style.display = "none";
+    }
+
+    if (mensajeEvento) {
+        document.getElementById("graciasEvento").innerText =
+            "Nos vemos en " + mensajeEvento;
+    } else {
+        document.getElementById("graciasEvento").innerText = "";
+    }
+
+    document.getElementById("modalGracias").style.display = "flex";
+}
+
+function cerrarGracias(){
+    document.getElementById("modalGracias").style.display = "none";
+}
+
+function actualizarContadorCierre(){
+    if (!cierreInscripcion) return;
+
+    const contador = document.getElementById("contadorCierre");
+    if (!contador) return;
+
+    const cierre = new Date(cierreInscripcion);
+    const ahora = new Date();
+    const diferencia = cierre - ahora;
+    const boxContador = document.getElementById("boxContador");
+
+    if (diferencia <= 0) {
+        contador.innerText = "INSCRIPCIÓN CERRADA";
+
+        if (boxContador) {
+            boxContador.style.background = "#b00020";
+        }
+
+        if (btnAnotarme) {
+            btnAnotarme.disabled = true;
+            btnAnotarme.innerText = "Inscripción cerrada";
+            btnAnotarme.style.background = "#777";
+        }
+
+        return;
+    }
+
+    if (boxContador) {
+        boxContador.style.background = "#1f7a3f";
+    }
+
+    if (btnAnotarme) {
+        btnAnotarme.disabled = false;
+        btnAnotarme.innerText = "Anotarme";
+        btnAnotarme.style.background = "#1f7a3f";
+    }
+
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diferencia / (1000 * 60 * 60)) % 24);
+    const minutos = Math.floor((diferencia / (1000 * 60)) % 60);
+    const segundos = Math.floor((diferencia / 1000) % 60);
+
+    contador.innerText = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+}
+
+setInterval(actualizarContadorCierre, 1000);
+actualizarContadorCierre();
+    
+function mostrarToast(msg, ok=true){
+    toast.innerText = msg;
+    toast.style.background = ok ? "#1f7a3f" : "#b00020";
+    toast.style.display = "block";
+
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 2500);
+}
+
+function compartir(){
+    let url = window.location.href;
+    let texto = "🏌️ Sumate al Torneo Matungo!\n\nAnotate acá:\n" + url;
+    let link = "https://wa.me/?text=" + encodeURIComponent(texto);
+    window.open(link, "_blank");
+}
+
+async function obtenerListaWhatsApp(){
+    const respuesta = await fetch("/lista_whatsapp", {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
+    });
+
+    let data;
+
+    try {
+        data = await respuesta.json();
+    } catch (error) {
+        throw new Error("La respuesta del servidor no es válida");
+    }
+
+    if (!respuesta.ok || !data.ok) {
+        throw new Error(data.msg || "No se pudo generar la lista");
+    }
+
+    return data.texto;
+}
+
+async function copiarListaWhatsApp(){
+    try {
+        const textoLista = await obtenerListaWhatsApp();
+
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+            await navigator.clipboard.writeText(textoLista);
+        } else {
+            const areaTemporal = document.createElement("textarea");
+            areaTemporal.value = textoLista;
+            areaTemporal.style.position = "fixed";
+            areaTemporal.style.left = "-9999px";
+            document.body.appendChild(areaTemporal);
+            areaTemporal.focus();
+            areaTemporal.select();
+
+            const copiado = document.execCommand("copy");
+            document.body.removeChild(areaTemporal);
+
+            if (!copiado) {
+                throw new Error("El navegador no permitió copiar el texto");
+            }
+        }
+
+        mostrarToast("✅ Lista copiada al portapapeles");
+
+    } catch (error) {
+        console.error("Error copiando lista:", error);
+        mostrarToast("⚠️ " + error.message, false);
+    }
+}
+
+async function abrirListaWhatsApp(){
+    try {
+        const textoLista = await obtenerListaWhatsApp();
+        const enlace =
+            "https://wa.me/?text=" +
+            encodeURIComponent(textoLista);
+
+        const ventana = window.open(enlace, "_blank");
+
+        if (!ventana) {
+            window.location.href = enlace;
+        }
+
+    } catch (error) {
+        console.error("Error abriendo WhatsApp:", error);
+        mostrarToast("⚠️ " + error.message, false);
+    }
+}
+
+function renderParticipantes(data){
+    const listaTeam22 = document.getElementById("listaTeam22");
+    const listaAguilas = document.getElementById("listaAguilas");
+    const listaInvitados = document.getElementById("listaInvitados");
+
+    const contadorTeam22 = document.getElementById("contadorTeam22");
+    const contadorAguilas = document.getElementById("contadorAguilas");
+    const contadorInvitados = document.getElementById("contadorInvitados");
+
+    listaTeam22.innerHTML = "";
+    listaAguilas.innerHTML = "";
+    listaInvitados.innerHTML = "";
+
+    let totalTeam22 = 0;
+    let totalAguilas = 0;
+    let totalInvitados = 0;
+
+    data
+    .sort((a, b) => {
+        let nombreA = (a.apellido + " " + a.nombre).toLowerCase();
+        let nombreB = (b.apellido + " " + b.nombre).toLowerCase();
+        return nombreA.localeCompare(nombreB);
+    })
+    .forEach(p => {
+        let div = document.createElement("div");
+        div.className = "card jugador-card";
+        div.dataset.id = p.id;
+
+        let html = `${p.apellido}, ${p.nombre}`;
+
+        if (ADMIN) {
+            html += `<button class="btn-delete" onclick="borrarJugador(${p.id})">❌</button>`;
+        }
+
+        div.innerHTML = html;
+
+        if (p.equipo === "Team 22") {
+            listaTeam22.appendChild(div);
+            totalTeam22++;
+        } else if (p.equipo === "Águilas") {
+            listaAguilas.appendChild(div);
+            totalAguilas++;
+        } else if (p.equipo === "Invitado") {
+            listaInvitados.appendChild(div);
+            totalInvitados++;
+        }
+    });
+
+    contadorTeam22.innerText = "(" + totalTeam22 + ")";
+    contadorAguilas.innerText = "(" + totalAguilas + ")";
+    contadorInvitados.innerText = "(" + totalInvitados + ")";
+}
+
+function cargarParticipantes(){
+    fetch("/participantes")
+    .then(res => res.json())
+    .then(data => renderParticipantes(data));
+}
+
+form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    let formData = new FormData(form);
+
+    fetch("/agregar", {
+        method: "POST",
+        body: formData
+    })
+    .then(async res => {
+        let data = await res.json();
+
+        if (!res.ok || !data.ok) {
+            mostrarToast("⚠️ " + data.msg, false);
+            return;
+        }
+
+        form.reset();
+        mostrarGracias(data);
+    })
+    .catch(() => {
+        mostrarToast("⚠️ Error al guardar", false);
+    });
+});
+
+function borrarJugador(id){
+    if (!confirm("¿Borrar jugador?")) return;
+
+    fetch("/delete/" + id, {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            mostrarToast("Jugador borrado");
+        }
+    });
+}
+
+function renderRegistros(registros){
+    const contenedor = document.getElementById("listaRegistros");
+
+    if (!contenedor || !ADMIN) {
+        return;
+    }
+
+    contenedor.innerHTML = "";
+
+    if (!registros.length) {
+        contenedor.innerHTML = "<p>No hay movimientos registrados.</p>";
+        return;
+    }
+
+    registros.forEach(r => {
+        const div = document.createElement("div");
+
+        div.style.border = "1px solid #ddd";
+        div.style.borderRadius = "8px";
+        div.style.padding = "10px";
+        div.style.marginBottom = "8px";
+        div.style.background = "#f7f7f7";
+
+        let contenido = `
+            <strong>${r.accion}</strong>
+            <br>
+            <small>${r.fecha_hora}</small>
+        `;
+
+        if (r.nombre || r.apellido) {
+            contenido += `
+                <p style="margin:6px 0;">
+                    ${r.nombre} ${r.apellido}
+                </p>
+            `;
+        }
+
+        if (r.dni_matricula) {
+            contenido += `<small>DNI: ${r.dni_matricula}</small><br>`;
+        }
+
+        if (r.matricula) {
+            contenido += `<small>Matrícula: ${r.matricula}</small><br>`;
+        }
+
+        if (r.equipo) {
+            contenido += `<small>Equipo: ${r.equipo}</small><br>`;
+        }
+
+        if (r.asistencia) {
+            contenido += `<small>Menú: ${r.asistencia}</small><br>`;
+        }
+
+        if (r.detalle) {
+            contenido += `<small>${r.detalle}</small>`;
+        }
+
+        div.innerHTML = contenido;
+        contenedor.appendChild(div);
+    });
+}
+
+function cargarRegistros(){
+    if (!ADMIN) {
+        return;
+    }
+
+    fetch("/registros")
+        .then(res => res.json())
+        .then(data => renderRegistros(data))
+        .catch(error => {
+            console.error("Error cargando historial:", error);
+        });
+}
+
+socket.on("actualizar_lista", function(){
+    cargarParticipantes();
+});
+
+socket.on("actualizar_registro", function(){
+    cargarRegistros();
+});
+
+cargarParticipantes();
+cargarRegistros();
+
+</script>
+
+</body>
+</html>
