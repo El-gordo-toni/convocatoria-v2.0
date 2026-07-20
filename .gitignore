@@ -1,0 +1,19 @@
+# Entorno virtual
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos locales
+.env
+*.log
+
+# Backups locales
+backups_reset/
