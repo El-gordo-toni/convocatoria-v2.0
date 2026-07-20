@@ -282,8 +282,11 @@ button {
     oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <input
+    type="text"
     name="matricula"
     placeholder="Matrícula (opcional)"
+    inputmode="numeric"
+    autocomplete="off"
     maxlength="50">
 
 <select name="equipo" required>
