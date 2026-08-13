@@ -18,10 +18,13 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
 
 socketio = SocketIO(app, async_mode="threading", cors_allowed_origins="*")
 
-if os.path.exists("/var/data"):
-    BASE_PATH = "/var/data"
-else:
-    BASE_PATH = "data"
+BASE_PATH = os.getenv("DATA_DIR")
+
+if not BASE_PATH:
+    if os.path.exists("/var/data"):
+        BASE_PATH = "/var/data"
+    else:
+        BASE_PATH = "data"
 
 UPLOAD_FOLDER = os.path.join(BASE_PATH, "uploads")
 DB_FILE = os.path.join(BASE_PATH, "datos.db")
