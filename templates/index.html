@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#173f2a">
 
 <style>
 body {
     margin:0;
-    font-family:Arial;
+    min-width:0;
+    font-family:Arial, Helvetica, sans-serif;
     color:white;
     background:url("{{ bg_path if bg_path else 'https://images.unsplash.com/photo-1599058917765-a780eda07a3e' }}") center/cover fixed;
+    line-height:1.5;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+}
+
+*, *::before, *::after {
+    box-sizing:border-box;
+}
+
+button, input, select {
+    font:inherit;
 }
 
 .modal-gracias {
@@ -20,34 +34,34 @@ body {
     align-items:center;
     justify-content:center;
     text-align:center;
-    padding:20px;
-    box-sizing:border-box;
+    padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow-y:auto;
 }
 
 .modal-contenido {
     background:white;
     color:#222;
-    padding:35px 25px;
-    border-radius:20px;
+    padding:28px 20px 20px;
+    border-radius:18px;
     max-width:480px;
     width:100%;
     box-shadow:0 15px 45px rgba(0,0,0,0.35);
-    animation:aparecerModal 0.35s ease;
+    max-height:calc(100dvh - 32px);
+    overflow-y:auto;
 }
 
 .check-animado {
-    width:90px;
-    height:90px;
-    margin:0 auto 20px;
+    width:72px;
+    height:72px;
+    margin:0 auto 16px;
     border-radius:50%;
     background:#25d366;
     color:white;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:55px;
+    font-size:44px;
     font-weight:bold;
-    animation:checkEntrada 0.55s ease;
 }
 
 .check-animado span {
@@ -104,78 +118,199 @@ body {
     margin-bottom:22px;
 }
 
-@keyframes checkEntrada {
-    0% {
-        transform:scale(0);
-        opacity:0;
-    }
-
-    65% {
-        transform:scale(1.15);
-        opacity:1;
-    }
-
-    100% {
-        transform:scale(1);
-    }
-}
-
-@keyframes aparecerModal {
-    from {
-        opacity:0;
-        transform:translateY(25px) scale(0.95);
-    }
-
-    to {
-        opacity:1;
-        transform:translateY(0) scale(1);
-    }
-}
-
 .overlay {
-    background:rgba(0,0,0,0.7);
+    background:linear-gradient(180deg, rgba(8,25,16,0.76), rgba(8,25,16,0.88));
     min-height:100vh;
-    padding:20px;
+    min-height:100dvh;
+    padding:max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.page-header {
+    max-width:760px;
+    margin:0 auto 24px;
+    text-align:center;
+}
+
+.page-header h1 {
+    margin:0;
+    font-size:clamp(1.75rem, 8vw, 2.75rem);
+    line-height:1.15;
+    text-wrap:balance;
+}
+
+.page-subtitles {
+    margin-top:12px;
+    color:#f1f5f2;
+}
+
+.page-subtitles p {
+    margin:4px 0;
+}
+
+.flash-message,
+.countdown {
+    max-width:760px;
+    margin:0 auto 16px;
+    border-radius:12px;
+    text-align:center;
+}
+
+.flash-message {
+    padding:14px 16px;
+    background:#f0faf4;
+    border:1px solid #7bc595;
+    color:#164c2a;
+    font-weight:700;
+}
+
+.countdown {
+    padding:12px 16px;
+    background:#1f7a3f;
+    color:white;
+}
+
+.countdown strong {
+    display:block;
+    margin-top:2px;
+    font-size:1.25rem;
 }
 
 .container {
-    display:flex;
-    gap:20px;
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    gap:8px;
     max-width:1200px;
     margin:auto;
 }
 
 .left,.right {
-    flex:1;
+    min-width:0;
 }
 
 .card {
     background:white;
-    color:black;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:15px;
+    color:#17211b;
+    padding:18px;
+    border-radius:14px;
+    margin-bottom:16px;
     position:relative;
+    box-shadow:0 8px 26px rgba(0,0,0,0.16);
+}
+
+.form-card h2 {
+    margin:0;
+    color:#173f2a;
+    font-size:1.3rem;
+}
+
+.form-intro {
+    margin:4px 0 18px;
+    color:#526057;
+    font-size:0.94rem;
+}
+
+.field {
+    margin-bottom:14px;
+}
+
+.field label {
+    display:block;
+    margin-bottom:6px;
+    color:#26352c;
+    font-size:0.92rem;
+    font-weight:700;
+}
+
+.optional {
+    color:#66736b;
+    font-weight:400;
 }
 
 input, select {
-    padding:12px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    margin-bottom:10px;
+    min-height:48px;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid #aeb8b1;
+    margin:0;
     width:100%;
-    box-sizing:border-box;
+    background:#fff;
+    color:#17211b;
+    font-size:16px;
+}
+
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+    outline:3px solid #f0b429;
+    outline-offset:2px;
 }
 
 button {
     width:100%;
-    padding:12px;
+    min-height:48px;
+    padding:12px 16px;
     border:none;
     border-radius:8px;
     background:#1f7a3f;
     color:white;
     font-weight:bold;
     cursor:pointer;
+    touch-action:manipulation;
+}
+
+button:disabled {
+    cursor:not-allowed;
+    opacity:0.72;
+}
+
+.btn-primary {
+    min-height:52px;
+    margin-top:2px;
+    font-size:1.05rem;
+    box-shadow:0 4px 10px rgba(31,122,63,0.24);
+}
+
+.share-card {
+    padding:14px;
+}
+
+.players-section {
+    min-width:0;
+}
+
+.players-header {
+    margin:6px 0 14px;
+}
+
+.players-header h2 {
+    margin:0;
+    font-size:1.4rem;
+}
+
+.players-header p {
+    margin:3px 0 0;
+    color:#e0e8e3;
+    font-size:0.92rem;
+}
+
+.team-lists {
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    gap:16px;
+}
+
+.team-column {
+    min-width:0;
+}
+
+.team-heading {
+    margin:0 0 8px;
+    font-size:1.05rem;
+}
+
+.jugador-card {
+    margin-bottom:8px;
+    padding:13px 14px;
+    overflow-wrap:anywhere;
+    box-shadow:0 3px 12px rgba(0,0,0,0.12);
 }
 
 .btn-delete {
@@ -215,20 +350,61 @@ button {
 #toast {
     display:none;
     position:fixed;
-    bottom:20px;
+    bottom:max(16px, env(safe-area-inset-bottom));
     left:50%;
     transform:translateX(-50%);
     background:#1f7a3f;
     color:white;
-    padding:12px 20px;
-    border-radius:8px;
+    width:calc(100% - 32px);
+    max-width:520px;
+    padding:14px 16px;
+    border-radius:10px;
     font-weight:bold;
+    text-align:center;
+    box-shadow:0 8px 28px rgba(0,0,0,0.3);
     z-index:9999;
 }
 
-@media(max-width:768px){
+@media (min-width:600px) {
+    .overlay {
+        padding-left:24px;
+        padding-right:24px;
+    }
+
+    .card {
+        padding:22px;
+    }
+
+    .team-lists {
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width:900px) {
     .container {
-        flex-direction:column;
+        grid-template-columns:minmax(300px, 0.82fr) minmax(0, 1.5fr);
+        gap:24px;
+        align-items:start;
+    }
+
+    .team-lists {
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:12px;
+    }
+}
+
+@media (max-width:359px) {
+    .overlay {
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    .card {
+        padding:16px;
+    }
+
+    .modal-contenido h1 {
+        font-size:1.45rem;
     }
 }
 </style>
@@ -238,19 +414,21 @@ button {
 <div class="overlay">
 
 {% for mensaje in get_flashed_messages() %}
-<div class="card" style="border:2px solid #1f7a3f;">
+<div class="flash-message" role="status">
     {{ mensaje }}
 </div>
 {% endfor %}
 
-<h1 style="text-align:center;">{{ config.titulo }}</h1>
+<header class="page-header">
+<h1>{{ config.titulo }}</h1>
 
-{% if config.cierre_inscripcion %}<div id="boxContador" style="background:#1f7a3f; color:white; padding:12px; border-radius:8px; margin-bottom:12px; text-align:center;">
+{% if config.cierre_inscripcion %}<div id="boxContador" class="countdown" role="status">
     ⏳ Inscripción abierta por:
-    <br>
-    <strong id="contadorCierre" style="font-size:22px;"></strong>
+    <strong id="contadorCierre"></strong>
 </div>
 {% endif %}    
+
+<div class="page-subtitles">
     
 {% if config.subtitulo %}
 <p style="text-align:center;">{{ config.subtitulo }}</p>
@@ -263,50 +441,72 @@ button {
 {% if config.subtitulo3 %}
 <p style="text-align:center;">{{ config.subtitulo3 }}</p>
 {% endif %}
+</div>
+</header>
 
 <div class="container">
 
 <div class="left">
 
-<div class="card">
+<div class="card form-card">
+<h2>Inscripción</h2>
+<p class="form-intro">Completá tus datos para sumarte.</p>
 <form id="formAgregar">
 
-<input name="nombre" placeholder="Nombre" required>
-<input name="apellido" placeholder="Apellido" required>
+<div class="field">
+<label for="nombre">Nombre</label>
+<input id="nombre" name="nombre" autocomplete="given-name" required>
+</div>
+<div class="field">
+<label for="apellido">Apellido</label>
+<input id="apellido" name="apellido" autocomplete="family-name" required>
+</div>
+<div class="field">
+<label for="dni_matricula">DNI</label>
 <input
+    id="dni_matricula"
     name="dni_matricula"
-    placeholder="DNI"
     required
     maxlength="8"
     inputmode="numeric"
+    autocomplete="off"
     oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+</div>
 
+<div class="field">
+<label for="matricula">Matrícula <span class="optional">(opcional)</span></label>
 <input
+    id="matricula"
     type="text"
     name="matricula"
-    placeholder="Matrícula (si no tiene dejar en blanco)"
     inputmode="numeric"
     autocomplete="off"
     maxlength="50">
+</div>
 
-<select name="equipo" required>
+<div class="field">
+<label for="equipo">Equipo</label>
+<select id="equipo" name="equipo" required>
     <option value="" disabled selected>Elegir equipo</option>
     <option value="Team 22">🔵 Team 22</option>
     <option value="Águilas">🦅 Águilas</option>
     <option value="Invitado">👤 Invitado</option>
 </select>
+</div>
 
 {% if menu_activo %}
-<label>Menú</label>
-<select name="asistencia" required>
+<div class="field">
+<label for="asistencia">Menú</label>
+<select id="asistencia" name="asistencia" required>
     <option value="" disabled selected>Seleccionar opción</option>
     {% for op in menu_opciones %}
     <option value="{{ op }}">{{ op }}</option>
     {% endfor %}
 </select>
+</div>
 {% endif %}
 
-<button id="btnAnotarme">
+<button id="btnAnotarme" class="btn-primary" type="submit">
     Anotarme
 </button>
 
@@ -314,8 +514,8 @@ button {
 </div>
 
 {% if config.whatsapp_activo %}
-<div class="card">
-<button onclick="compartir()">📲 Compartir por WhatsApp</button>
+<div class="card share-card">
+<button type="button" onclick="compartir()">📲 Compartir por WhatsApp</button>
 </div>
 {% endif %}
 
@@ -432,24 +632,29 @@ button {
 
 </div>
 
-<div class="right">
+<div class="right players-section">
 
-<div style="display:flex; gap:15px; flex-wrap:wrap;">
+<div class="players-header">
+    <h2>Inscriptos</h2>
+    <p>Lista actualizada en tiempo real</p>
+</div>
 
-    <div style="flex:1; min-width:220px;">
-        <h3>🔵 Team 22 <span id="contadorTeam22"></span></h3>
+<div class="team-lists">
+
+    <section class="team-column" aria-labelledby="tituloTeam22">
+        <h3 id="tituloTeam22" class="team-heading">🔵 Team 22 <span id="contadorTeam22"></span></h3>
         <div id="listaTeam22"></div>
-    </div>
+    </section>
 
-    <div style="flex:1; min-width:220px;">
-        <h3>🦅 Águilas <span id="contadorAguilas"></span></h3>
+    <section class="team-column" aria-labelledby="tituloAguilas">
+        <h3 id="tituloAguilas" class="team-heading">🦅 Águilas <span id="contadorAguilas"></span></h3>
         <div id="listaAguilas"></div>
-    </div>
+    </section>
 
-    <div style="flex:1; min-width:220px;">
-        <h3>👤 Invitados <span id="contadorInvitados"></span></h3>
+    <section class="team-column" aria-labelledby="tituloInvitados">
+        <h3 id="tituloInvitados" class="team-heading">👤 Invitados <span id="contadorInvitados"></span></h3>
         <div id="listaInvitados"></div>
-    </div>
+    </section>
 
 </div>
 
@@ -458,7 +663,7 @@ button {
 </div>
 </div>
 
-    <div id="modalGracias" class="modal-gracias">
+    <div id="modalGracias" class="modal-gracias" role="dialog" aria-modal="true" aria-labelledby="graciasNombre" aria-describedby="mensajeConfirmacion">
         <div class="modal-contenido">
 
             <div class="check-animado">
@@ -467,7 +672,7 @@ button {
 
             <h1 id="graciasNombre">¡Gracias!</h1>
 
-            <p class="confirmacion">
+            <p id="mensajeConfirmacion" class="confirmacion">
                 Tu inscripción fue registrada correctamente.
             </p>
 
@@ -498,7 +703,7 @@ button {
         </div>
     </div>
 
-<div id="toast"></div>
+<div id="toast" role="alert" aria-live="assertive"></div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
