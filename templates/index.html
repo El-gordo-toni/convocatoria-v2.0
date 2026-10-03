@@ -876,6 +876,16 @@ button:disabled {
     </small>
 </div>
 
+<div class="estado-salidas">
+    <label>
+        <input type="checkbox" name="aplicar_hdcp_85" {% if config.aplicar_hdcp_85 %}checked{% endif %}>
+        <strong> Aplicar HDCP al 85%</strong>
+    </label>
+    <small style="display:block;margin-top:6px;">
+        Activado: muestra el HDCP calculado al 85% en las salidas. Desactivado: muestra solamente el HDCP original.
+    </small>
+</div>
+
 <hr>
 
 <h3>Historial de movimientos</h3>
@@ -980,7 +990,7 @@ button:disabled {
             {% for jugador in salida.jugadores %}
             <span>
                 {{ jugador.nombre_completo }}
-                <small>HDCP {{ jugador.hdcp }} · 85% {{ jugador.hdcp_85 }}</small>
+                <small>HDCP {{ jugador.hdcp }}{% if config.aplicar_hdcp_85 %} · 85% {{ jugador.hdcp_85 }}{% endif %}</small>
             </span>
             {% else %}
             <span class="sin-jugadores">Sin jugadores cargados</span>
@@ -1010,7 +1020,7 @@ button:disabled {
             <details class="jugador-editor">
                 <summary>
                     <span><strong>{{ jugador.nombre_completo }}</strong></span>
-                    <span>HDCP {{ jugador.hdcp }} · 85% {{ jugador.hdcp_85 }}</span>
+                    <span>HDCP {{ jugador.hdcp }}{% if config.aplicar_hdcp_85 %} · 85% {{ jugador.hdcp_85 }}{% endif %}</span>
                 </summary>
 
                 <div class="jugador-editor-cuerpo">
@@ -1217,7 +1227,7 @@ button:disabled {
                     <tr>
                         <th>Jugador</th>
                         <th>HDCP</th>
-                        <th>85%</th>
+                        {% if config.aplicar_hdcp_85 %}<th>85%</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -1233,7 +1243,7 @@ button:disabled {
                             </span>
                         </td>
                         <td><strong>{{ jugador.hdcp }}</strong></td>
-                        <td><strong>{{ jugador.hdcp_85 }}</strong></td>
+                        {% if config.aplicar_hdcp_85 %}<td><strong>{{ jugador.hdcp_85 }}</strong></td>{% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -160,6 +160,7 @@ class Config(db.Model):
     cierre_inscripcion = db.Column(db.String(30), default="")
     whatsapp_activo = db.Column(db.Boolean, default=True)
     mostrar_salidas = db.Column(db.Boolean, default=False)
+    aplicar_hdcp_85 = db.Column(db.Boolean, default=True)
 
 
 class Handicap(db.Model):
@@ -546,6 +547,7 @@ with app.app_context():
         migrar_columna(conn, "config", "whatsapp_activo", "BOOLEAN DEFAULT 1")
         migrar_columna(conn, "config", "cierre_inscripcion", "VARCHAR(30) DEFAULT ''")
         migrar_columna(conn, "config", "mostrar_salidas", "BOOLEAN DEFAULT 0")
+        migrar_columna(conn, "config", "aplicar_hdcp_85", "BOOLEAN DEFAULT 1")
         migrar_salida_jugador_v2(conn)
         migrar_columna(conn, "salida_jugador", "hdcp_manual", "VARCHAR(10)")
         migrar_columna(conn, "salida_jugador", "handicap_id", "INTEGER")
@@ -1263,6 +1265,7 @@ def update_config():
         config.menu_activo = bool(request.form.get("menu_activo"))
         config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
         config.mostrar_salidas = bool(request.form.get("mostrar_salidas"))
+        config.aplicar_hdcp_85 = bool(request.form.get("aplicar_hdcp_85"))
 
         db.session.commit()
     except Exception as error:
