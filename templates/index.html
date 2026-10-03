@@ -393,6 +393,121 @@ button:disabled {
     }
 }
 
+
+.salidas-publicas {
+    max-width:1000px;
+    margin:0 auto;
+}
+
+.salidas-publicas-header {
+    text-align:center;
+    margin-bottom:18px;
+}
+
+.salidas-publicas-header h2 {
+    margin:0;
+    font-size:1.65rem;
+}
+
+.salidas-publicas-header p {
+    margin:5px 0 0;
+    color:#e0e8e3;
+}
+
+.salidas-grid {
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    gap:16px;
+}
+
+.salida-card h3 {
+    margin:0 0 12px;
+    color:#173f2a;
+    font-size:1.25rem;
+}
+
+.salida-tabla {
+    width:100%;
+    border-collapse:collapse;
+}
+
+.salida-tabla th,
+.salida-tabla td {
+    padding:10px 8px;
+    border-bottom:1px solid #e0e5e1;
+    text-align:left;
+    vertical-align:middle;
+}
+
+.salida-tabla th {
+    color:#526057;
+    font-size:0.82rem;
+    text-transform:uppercase;
+}
+
+.salida-tabla td:nth-last-child(-n+2),
+.salida-tabla th:nth-last-child(-n+2) {
+    text-align:center;
+    width:58px;
+}
+
+.equipo-mini {
+    display:block;
+    color:#66736b;
+    font-size:0.78rem;
+    margin-top:2px;
+}
+
+.admin-salidas {
+    margin-top:18px;
+}
+
+.admin-salida-box {
+    border:1px solid #d7ded9;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:12px;
+    background:#f8faf8;
+}
+
+.admin-salida-jugador {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    border-top:1px solid #e1e6e2;
+    padding:8px 0;
+}
+
+.admin-salida-jugador:first-of-type {
+    margin-top:8px;
+}
+
+.btn-small {
+    width:auto;
+    min-height:36px;
+    padding:7px 10px;
+    font-size:0.85rem;
+}
+
+.btn-danger {
+    background:#b00020;
+}
+
+.estado-salidas {
+    padding:12px;
+    border-radius:10px;
+    margin:10px 0 14px;
+    background:#eef7f1;
+    border:1px solid #b8d7c2;
+}
+
+@media (min-width:700px) {
+    .salidas-grid {
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width:359px) {
     .overlay {
         padding-left:12px;
@@ -407,6 +522,201 @@ button:disabled {
         font-size:1.45rem;
     }
 }
+
+/* ===== SALIDAS ADMIN COMPACTAS ===== */
+.salidas-resumen{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin:12px 0 16px;
+}
+.salidas-resumen div{
+    background:#f3f7f4;
+    border:1px solid #dce5df;
+    border-radius:12px;
+    padding:10px 6px;
+    text-align:center;
+}
+.salidas-resumen strong{
+    display:block;
+    font-size:1.25rem;
+    color:#1f7a3f;
+}
+.salidas-resumen span{
+    display:block;
+    margin-top:2px;
+    font-size:.76rem;
+    color:#66726a;
+}
+.salida-acordeon{
+    border:1px solid #d9e1dc;
+    border-radius:12px;
+    margin:9px 0;
+    background:#fff;
+    overflow:hidden;
+}
+.salida-acordeon > summary{
+    list-style:none;
+    cursor:pointer;
+    padding:12px 14px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:5px 12px;
+    align-items:center;
+    user-select:none;
+}
+.salida-acordeon > summary::-webkit-details-marker{display:none;}
+.salida-acordeon[open] > summary{
+    background:#f6faf7;
+    border-bottom:1px solid #dce5df;
+}
+.salida-summary-principal{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-weight:800;
+    color:#173f2a;
+}
+.salida-summary-secundario{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.salida-hora{font-size:1.03rem;}
+.salida-hoyo{
+    font-size:.8rem;
+    background:#eef3ef;
+    padding:3px 7px;
+    border-radius:999px;
+    color:#4e5d53;
+}
+.badge-jugadores{
+    font-size:.78rem;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#e8f5ec;
+    color:#176b35;
+    white-space:nowrap;
+}
+.badge-jugadores.incompleto{
+    background:#fff4dc;
+    color:#8a5a00;
+}
+.chevron{
+    font-size:1.15rem;
+    transition:transform .15s ease;
+}
+.salida-acordeon[open] .chevron{transform:rotate(180deg);}
+.salida-jugadores-preview{
+    grid-column:1 / -1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px 8px;
+    margin-top:4px;
+}
+.salida-jugadores-preview > span{
+    background:#f7f8f7;
+    border-radius:8px;
+    padding:5px 8px;
+    font-size:.8rem;
+    color:#29352d;
+}
+.salida-jugadores-preview small{
+    color:#738078;
+    margin-left:4px;
+}
+.salida-jugadores-preview .sin-jugadores{
+    color:#8a5a00;
+}
+.salida-editor{
+    padding:13px;
+    background:#fbfcfb;
+}
+.salida-editor-titulo{
+    font-weight:800;
+    margin-bottom:10px;
+}
+.fila-horario-hoyo,
+.fila-hdcp-equipo{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+.form-salida-compacto{
+    border-bottom:1px solid #e2e7e3;
+    padding-bottom:12px;
+    margin-bottom:10px;
+}
+.jugador-editor{
+    border:1px solid #e0e5e1;
+    border-radius:9px;
+    margin:6px 0;
+    background:white;
+}
+.jugador-editor > summary{
+    cursor:pointer;
+    list-style:none;
+    padding:9px 10px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:.86rem;
+}
+.jugador-editor > summary::-webkit-details-marker{display:none;}
+.jugador-editor-cuerpo{
+    border-top:1px solid #e6eae7;
+    padding:10px;
+}
+.agregar-jugador-acordeon{
+    margin-top:10px;
+    border:1px dashed #9bb9a4;
+    border-radius:9px;
+}
+.agregar-jugador-acordeon > summary{
+    cursor:pointer;
+    padding:10px;
+    font-weight:700;
+    color:#1f7a3f;
+}
+.agregar-jugador-cuerpo{padding:0 10px 10px;}
+.eliminar-grupo-form{
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid #e4e8e5;
+}
+.nuevo-grupo-acordeon{
+    border:2px solid #1f7a3f;
+    margin-bottom:15px;
+}
+.nuevo-grupo-acordeon > summary{
+    background:#f5fbf7;
+}
+.salida-summary-ayuda{
+    font-size:.8rem;
+    color:#6c786f;
+}
+.nuevo-grupo-acordeon .admin-salida-box{
+    border:0 !important;
+    margin:0;
+    padding:0;
+    box-shadow:none;
+}
+@media(max-width:600px){
+    .salidas-resumen{grid-template-columns:repeat(3,1fr);}
+    .salidas-resumen span{font-size:.68rem;}
+    .salida-acordeon > summary{grid-template-columns:1fr;}
+    .salida-summary-secundario{justify-content:space-between;}
+    .salida-jugadores-preview{display:grid;grid-template-columns:1fr;}
+    .salida-jugadores-preview > span{
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+    }
+    .fila-horario-hoyo,
+    .fila-hdcp-equipo{grid-template-columns:1fr;}
+    .jugador-editor > summary{flex-direction:column;gap:2px;}
+}
+
 </style>
 </head>
 
@@ -444,6 +754,7 @@ button:disabled {
 </div>
 </header>
 
+{% if not config.mostrar_salidas or ver_panel_admin %}
 <div class="container">
 
 <div class="left">
@@ -523,6 +834,11 @@ button:disabled {
 <div class="card admin-card">
 
 <h3>Panel Admin</h3>
+{% if config.mostrar_salidas %}
+<p style="margin-top:0;">
+    <a href="/">← Ver pantalla pública de salidas</a>
+</p>
+{% endif %}
 
 <form method="POST" action="/update_config">
 <input name="titulo" value="{{ config.titulo }}" placeholder="Título">
@@ -550,6 +866,16 @@ button:disabled {
  Activar botón WhatsApp
 </label>
 
+<div class="estado-salidas">
+    <label>
+        <input type="checkbox" name="mostrar_salidas" {% if config.mostrar_salidas %}checked{% endif %}>
+        <strong> Mostrar pantalla pública de salidas</strong>
+    </label>
+    <small style="display:block;margin-top:6px;">
+        Al activarlo, los jugadores verán los grupos y HDCP en lugar del formulario de inscripción.
+    </small>
+</div>
+
 <hr>
 
 <h3>Historial de movimientos</h3>
@@ -569,6 +895,214 @@ button:disabled {
 <button>Guardar configuración</button>
 </form>
 
+<hr>
+
+<div class="admin-salidas">
+<h3>⛳ Configurar salidas</h3>
+
+{% set ns = namespace(total_jugadores=0, incompletos=0) %}
+{% for s in salidas %}
+    {% set ns.total_jugadores = ns.total_jugadores + (s.jugadores|length) %}
+    {% if s.jugadores|length < 4 %}
+        {% set ns.incompletos = ns.incompletos + 1 %}
+    {% endif %}
+{% endfor %}
+
+<div class="salidas-resumen">
+    <div><strong>{{ salidas|length }}</strong><span>Grupos</span></div>
+    <div><strong>{{ ns.total_jugadores }}</strong><span>Jugadores</span></div>
+    <div><strong>{{ ns.incompletos }}</strong><span>Grupos incompletos</span></div>
+</div>
+
+<details class="salida-acordeon nuevo-grupo-acordeon">
+    <summary>
+        <span class="salida-summary-principal">➕ Crear nuevo grupo</span>
+        <span class="salida-summary-ayuda">hasta 4 jugadores</span>
+    </summary>
+    <div class="salida-editor">
+<div class="admin-salida-box" style="border:2px solid #1f7a3f;">
+
+<form method="POST" action="/salidas/crear-grupo">
+    <label>Horario</label>
+    <input type="time" name="horario" required>
+    <label>Hoyo de salida</label>
+    <input type="number" name="hoyo" min="1" max="18" required>
+
+    {% for n in range(1,5) %}
+    <div style="border-top:1px solid #ddd;margin-top:14px;padding-top:12px;">
+        <strong>Jugador {{ n }}{% if n > 1 %} (opcional){% endif %}</strong>
+        <select name="jugador_{{ n }}" id="jugador_{{ n }}" onchange="cargarHdcpGrupo({{ n }})">
+            <option value="">-- Sin jugador --</option>
+            <option value="__manual__">✍️ Cargar invitado manualmente</option>
+            {% for h in handicaps_salidas %}
+            <option value="{{ h.id }}" data-nombre="{{ h.nombre|e }}" data-hdcp="{{ h.hdcp|e }}">
+                {{ h.nombre }} — HDCP {{ h.hdcp }}
+            </option>
+            {% else %}
+            <option value="" disabled>No quedan jugadores disponibles</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="nombre_manual_{{ n }}" id="nombre_manual_{{ n }}"
+               placeholder="Nombre (solo para invitado)" style="display:none;margin-top:6px;">
+        <input type="text" name="hdcp_manual_{{ n }}" id="hdcp_manual_{{ n }}"
+               placeholder="HDCP" maxlength="10" inputmode="decimal" style="margin-top:6px;">
+        <select name="equipo_manual_{{ n }}" style="margin-top:6px;">
+            <option value="">Sin equipo</option>
+            <option value="Team 22">🔵 Team 22</option>
+            <option value="Águilas">🦅 Águilas</option>
+            <option value="Invitado">👤 Invitado</option>
+        </select>
+    </div>
+    {% endfor %}
+    <button type="submit" style="margin-top:14px;">💾 Guardar grupo completo</button>
+</form>
+</div>
+    </div>
+</details>
+
+{% if salidas %}
+<div class="lista-grupos-compacta">
+{% for salida in salidas %}
+<details class="salida-acordeon">
+    <summary>
+        <div class="salida-summary-principal">
+            <span class="salida-hora">⛳ {{ salida.horario }}</span>
+            <span class="salida-hoyo">Hoyo {{ salida.hoyo }}</span>
+        </div>
+        <div class="salida-summary-secundario">
+            <span class="badge-jugadores {% if salida.jugadores|length < 4 %}incompleto{% endif %}">
+                {{ salida.jugadores|length }}/4 jugadores
+            </span>
+            <span class="chevron">⌄</span>
+        </div>
+
+        <div class="salida-jugadores-preview">
+            {% for jugador in salida.jugadores %}
+            <span>
+                {{ jugador.nombre_completo }}
+                <small>HDCP {{ jugador.hdcp }} · 85% {{ jugador.hdcp_85 }}</small>
+            </span>
+            {% else %}
+            <span class="sin-jugadores">Sin jugadores cargados</span>
+            {% endfor %}
+        </div>
+    </summary>
+
+    <div class="salida-editor">
+        <div class="salida-editor-titulo">✏️ Editar grupo</div>
+
+        <form method="POST" action="/salidas/{{ salida.id }}/editar" class="form-salida-compacto">
+            <div class="fila-horario-hoyo">
+                <div>
+                    <label>Horario</label>
+                    <input type="time" name="horario" value="{{ salida.horario }}" required>
+                </div>
+                <div>
+                    <label>Hoyo</label>
+                    <input type="number" name="hoyo" min="1" max="18" value="{{ salida.hoyo }}" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-small">💾 Guardar horario / hoyo</button>
+        </form>
+
+        <div class="jugadores-editor-lista">
+        {% for jugador in salida.jugadores %}
+            <details class="jugador-editor">
+                <summary>
+                    <span><strong>{{ jugador.nombre_completo }}</strong></span>
+                    <span>HDCP {{ jugador.hdcp }} · 85% {{ jugador.hdcp_85 }}</span>
+                </summary>
+
+                <div class="jugador-editor-cuerpo">
+                    <form method="POST" action="/salidas/asignacion/{{ jugador.asignacion_id }}/editar">
+                        <label>Nombre</label>
+                        <input name="nombre" value="{{ jugador.nombre_completo }}" required>
+
+                        <div class="fila-hdcp-equipo">
+                            <div>
+                                <label>HDCP</label>
+                                <input name="hdcp_manual" value="{{ jugador.hdcp }}" maxlength="10">
+                            </div>
+                            <div>
+                                <label>Equipo</label>
+                                <select name="equipo_manual">
+                                    <option value="" {% if not jugador.equipo %}selected{% endif %}>Sin equipo</option>
+                                    <option value="Team 22" {% if jugador.equipo == "Team 22" %}selected{% endif %}>🔵 Team 22</option>
+                                    <option value="Águilas" {% if jugador.equipo == "Águilas" %}selected{% endif %}>🦅 Águilas</option>
+                                    <option value="Invitado" {% if jugador.equipo == "Invitado" %}selected{% endif %}>👤 Invitado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-small">Guardar jugador</button>
+                    </form>
+
+                    <form method="POST"
+                          action="/salidas/asignacion/{{ jugador.asignacion_id }}/quitar"
+                          onsubmit="return confirm('¿Quitar este jugador?');">
+                        <button type="submit" class="btn-small btn-danger">Quitar del grupo</button>
+                    </form>
+                </div>
+            </details>
+        {% endfor %}
+        </div>
+
+        {% if salida.jugadores|length < 4 %}
+        <details class="agregar-jugador-acordeon">
+            <summary>➕ Agregar otro jugador</summary>
+            <div class="agregar-jugador-cuerpo">
+                <form method="POST" action="/salidas/{{ salida.id }}/agregar">
+                    <label>Jugador</label>
+                    <select name="jugador" id="extra_{{ salida.id }}" onchange="cargarHdcpExtra({{ salida.id }})">
+                        <option value="">Seleccionar</option>
+                        <option value="__manual__">✍️ Invitado manual</option>
+                        {% for h in handicaps_salidas %}
+                        <option value="{{ h.id }}" data-hdcp="{{ h.hdcp|e }}">
+                            {{ h.nombre }} — HDCP {{ h.hdcp }}
+                        </option>
+                        {% else %}
+                        <option value="" disabled>No quedan jugadores disponibles</option>
+                        {% endfor %}
+                    </select>
+
+                    <input name="nombre_manual"
+                           id="extra_nombre_{{ salida.id }}"
+                           placeholder="Nombre invitado"
+                           style="display:none;">
+
+                    <label>HDCP</label>
+                    <input name="hdcp_manual"
+                           id="extra_hdcp_{{ salida.id }}"
+                           placeholder="HDCP">
+
+                    <label>Equipo</label>
+                    <select name="equipo_manual">
+                        <option value="">Sin equipo</option>
+                        <option value="Team 22">🔵 Team 22</option>
+                        <option value="Águilas">🦅 Águilas</option>
+                        <option value="Invitado">👤 Invitado</option>
+                    </select>
+
+                    <button type="submit">Agregar jugador</button>
+                </form>
+            </div>
+        </details>
+        {% endif %}
+
+        <form method="POST"
+              action="/salidas/{{ salida.id }}/eliminar"
+              onsubmit="return confirm('¿Eliminar este grupo completo?');"
+              class="eliminar-grupo-form">
+            <button type="submit" class="btn-danger">🗑 Eliminar grupo completo</button>
+        </form>
+    </div>
+</details>
+{% endfor %}
+</div>
+{% else %}
+<p>Todavía no creaste grupos de salida.</p>
+{% endif %}
+</div>
 <hr>
 
 <form method="POST" action="/upload_bg" enctype="multipart/form-data">
@@ -662,6 +1196,70 @@ button:disabled {
 
 </div>
 </div>
+
+{% else %}
+
+<div class="salidas-publicas">
+    <div class="salidas-publicas-header">
+        <h2>⛳ Salidas</h2>
+        <p>Consultá tu horario, grupo y handicap actualizado.</p>
+    </div>
+
+    {% if salidas %}
+    <div class="salidas-grid">
+        {% for salida in salidas %}
+        <div class="card salida-card">
+            <h3>⛳ {{ salida.horario }} · Hoyo {{ salida.hoyo }}</h3>
+
+            {% if salida.jugadores %}
+            <table class="salida-tabla">
+                <thead>
+                    <tr>
+                        <th>Jugador</th>
+                        <th>HDCP</th>
+                        <th>85%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for jugador in salida.jugadores %}
+                    <tr>
+                        <td>
+                            <strong>{{ jugador.apellido }}, {{ jugador.nombre }}</strong>
+                            <span class="equipo-mini">
+                                {% if jugador.equipo == "Team 22" %}🔵
+                                {% elif jugador.equipo == "Águilas" %}🦅
+                                {% else %}👤{% endif %}
+                                {{ jugador.equipo }}
+                            </span>
+                        </td>
+                        <td><strong>{{ jugador.hdcp }}</strong></td>
+                        <td><strong>{{ jugador.hdcp_85 }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Todavía no hay jugadores asignados a esta salida.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;">
+        <h3>Las salidas se están preparando</h3>
+        <p>La organización publicará los grupos próximamente.</p>
+    </div>
+    {% endif %}
+
+    {% if admin %}
+    <div class="card admin-card" style="margin-top:20px;">
+        <p><strong>Modo administrador:</strong> la pantalla pública está mostrando las salidas.</p>
+        <a href="/?admin=1">Administración</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endif %}
 
     <div id="modalGracias" class="modal-gracias" role="dialog" aria-modal="true" aria-labelledby="graciasNombre" aria-describedby="mensajeConfirmacion">
         <div class="modal-contenido">
@@ -901,6 +1499,41 @@ async function abrirListaWhatsApp(){
     }
 }
 
+function cargarHdcpGrupo(n){
+    const s = document.getElementById("jugador_" + n);
+    const h = document.getElementById("hdcp_manual_" + n);
+    const nombre = document.getElementById("nombre_manual_" + n);
+    const op = s.options[s.selectedIndex];
+
+    if (s.value === "__manual__") {
+        nombre.style.display = "block";
+        nombre.value = "";
+        h.value = "";
+        nombre.focus();
+    } else {
+        nombre.style.display = "none";
+        nombre.value = "";
+        h.value = op && op.dataset ? (op.dataset.hdcp || "") : "";
+    }
+}
+
+function cargarHdcpExtra(id){
+    const s = document.getElementById("extra_" + id);
+    const h = document.getElementById("extra_hdcp_" + id);
+    const nombre = document.getElementById("extra_nombre_" + id);
+    const op = s.options[s.selectedIndex];
+
+    if (s.value === "__manual__") {
+        nombre.style.display = "block";
+        h.value = "";
+        nombre.focus();
+    } else {
+        nombre.style.display = "none";
+        nombre.value = "";
+        h.value = op && op.dataset ? (op.dataset.hdcp || "") : "";
+    }
+}
+
 function renderParticipantes(data){
     const listaTeam22 = document.getElementById("listaTeam22");
     const listaAguilas = document.getElementById("listaAguilas");
@@ -909,6 +1542,10 @@ function renderParticipantes(data){
     const contadorTeam22 = document.getElementById("contadorTeam22");
     const contadorAguilas = document.getElementById("contadorAguilas");
     const contadorInvitados = document.getElementById("contadorInvitados");
+
+    if (!listaTeam22 || !listaAguilas || !listaInvitados) {
+        return;
+    }
 
     listaTeam22.innerHTML = "";
     listaAguilas.innerHTML = "";
@@ -960,6 +1597,7 @@ function cargarParticipantes(){
     .then(data => renderParticipantes(data));
 }
 
+if (form) {
 form.addEventListener("submit", function(e){
     e.preventDefault();
 
@@ -984,6 +1622,7 @@ form.addEventListener("submit", function(e){
         mostrarToast("⚠️ Error al guardar", false);
     });
 });
+}
 
 function borrarJugador(id){
     if (!confirm("¿Borrar jugador?")) return;
@@ -1080,6 +1719,12 @@ socket.on("actualizar_lista", function(){
 
 socket.on("actualizar_registro", function(){
     cargarRegistros();
+});
+
+socket.on("actualizar_salidas", function(){
+    if ({{ 'true' if config.mostrar_salidas else 'false' }}) {
+        window.location.reload();
+    }
 });
 
 cargarParticipantes();

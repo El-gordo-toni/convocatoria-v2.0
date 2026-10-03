@@ -59,7 +59,9 @@ TABLAS_PRINCIPALES = {
     "participante",
     "config",
     "handicap",
-    "registro_movimiento"
+    "registro_movimiento",
+    "salida",
+    "salida_jugador"
 }
 
 
@@ -157,12 +159,51 @@ class Config(db.Model):
     menu_activo = db.Column(db.Boolean, default=True)
     cierre_inscripcion = db.Column(db.String(30), default="")
     whatsapp_activo = db.Column(db.Boolean, default=True)
+    mostrar_salidas = db.Column(db.Boolean, default=False)
 
 
 class Handicap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
     hdcp = db.Column(db.String(10))
+
+
+class Salida(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    horario = db.Column(db.String(20), nullable=False)
+    hoyo = db.Column(db.String(10), default="")
+    orden = db.Column(db.Integer, default=0)
+
+
+class SalidaJugador(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    salida_id = db.Column(
+        db.Integer,
+        db.ForeignKey("salida.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    participante_id = db.Column(
+        db.Integer,
+        db.ForeignKey("participante.id", ondelete="CASCADE"),
+        nullable=True
+    )
+    handicap_id = db.Column(db.Integer, db.ForeignKey("handicap.id", ondelete="SET NULL"))
+    nombre_manual = db.Column(db.String(200))
+    equipo_manual = db.Column(db.String(50))
+    orden = db.Column(db.Integer, default=0)
+    hdcp_manual = db.Column(db.String(10))
+
+    salida = db.relationship(
+        "Salida",
+        backref=db.backref(
+            "asignaciones",
+            cascade="all, delete-orphan",
+            order_by="SalidaJugador.orden"
+        )
+    )
+    participante = db.relationship("Participante")
+    handicap = db.relationship("Handicap")
+
 
 class RegistroMovimiento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -210,6 +251,49 @@ def migrar_columna(conn, tabla, columna, definicion):
     columnas = [row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({tabla})")]
     if columna not in columnas:
         conn.exec_driver_sql(f"ALTER TABLE {tabla} ADD COLUMN {columna} {definicion}")
+
+
+def migrar_salida_jugador_v2(conn):
+    info = conn.exec_driver_sql("PRAGMA table_info(salida_jugador)").fetchall()
+    if not info:
+        return
+    cols = {r[1]: r for r in info}
+    necesita = (
+        "handicap_id" not in cols
+        or "nombre_manual" not in cols
+        or "equipo_manual" not in cols
+        or ("participante_id" in cols and cols["participante_id"][3] == 1)
+    )
+    if not necesita:
+        return
+
+    conn.exec_driver_sql("PRAGMA foreign_keys=OFF")
+    conn.exec_driver_sql("""
+        CREATE TABLE salida_jugador_v2 (
+            id INTEGER NOT NULL PRIMARY KEY,
+            salida_id INTEGER NOT NULL,
+            participante_id INTEGER,
+            handicap_id INTEGER,
+            nombre_manual VARCHAR(200),
+            equipo_manual VARCHAR(50),
+            orden INTEGER DEFAULT 0,
+            hdcp_manual VARCHAR(10),
+            FOREIGN KEY(salida_id) REFERENCES salida(id) ON DELETE CASCADE,
+            FOREIGN KEY(participante_id) REFERENCES participante(id) ON DELETE SET NULL,
+            FOREIGN KEY(handicap_id) REFERENCES handicap(id) ON DELETE SET NULL
+        )
+    """)
+    p = "participante_id" if "participante_id" in cols else "NULL"
+    o = "orden" if "orden" in cols else "0"
+    h = "hdcp_manual" if "hdcp_manual" in cols else "NULL"
+    conn.exec_driver_sql(f"""
+        INSERT INTO salida_jugador_v2
+        (id,salida_id,participante_id,handicap_id,nombre_manual,equipo_manual,orden,hdcp_manual)
+        SELECT id,salida_id,{p},NULL,NULL,NULL,{o},{h} FROM salida_jugador
+    """)
+    conn.exec_driver_sql("DROP TABLE salida_jugador")
+    conn.exec_driver_sql("ALTER TABLE salida_jugador_v2 RENAME TO salida_jugador")
+    conn.exec_driver_sql("PRAGMA foreign_keys=ON")
 
 
 def completar_normalizaciones_participantes(conn):
@@ -461,6 +545,13 @@ with app.app_context():
         migrar_columna(conn, "config", "menu_activo", "BOOLEAN DEFAULT 1")
         migrar_columna(conn, "config", "whatsapp_activo", "BOOLEAN DEFAULT 1")
         migrar_columna(conn, "config", "cierre_inscripcion", "VARCHAR(30) DEFAULT ''")
+        migrar_columna(conn, "config", "mostrar_salidas", "BOOLEAN DEFAULT 0")
+        migrar_salida_jugador_v2(conn)
+        migrar_columna(conn, "salida_jugador", "hdcp_manual", "VARCHAR(10)")
+        migrar_columna(conn, "salida_jugador", "handicap_id", "INTEGER")
+        migrar_columna(conn, "salida_jugador", "nombre_manual", "VARCHAR(200)")
+        migrar_columna(conn, "salida_jugador", "equipo_manual", "VARCHAR(50)")
+        migrar_columna(conn, "salida", "hoyo", "VARCHAR(10) DEFAULT ''")
 
         migrar_columna(conn, "participante", "asistencia", "VARCHAR(100)")
         migrar_columna(conn, "participante", "equipo", "VARCHAR(50)")
@@ -639,6 +730,140 @@ def generar_texto_whatsapp(config, participantes):
     return "\n".join(lineas)
 
 
+def normalizar_busqueda_hdcp(t):
+    texto = normalizar_nombre(t)
+    texto = re.sub(r"[^a-z0-9áéíóúüñ ]", " ", texto)
+    return " ".join(texto.split())
+
+
+def buscar_hdcp_participante(participante, handicaps=None):
+    if handicaps is None:
+        handicaps = Handicap.query.all()
+
+    candidatos = []
+
+    if participante.matricula:
+        matricula = normalizar_matricula(participante.matricula)
+        for h in handicaps:
+            if matricula and matricula in normalizar_busqueda_hdcp(h.nombre):
+                return h.hdcp
+
+    nombre_apellido = normalizar_busqueda_hdcp(
+        f"{participante.nombre} {participante.apellido}"
+    )
+    apellido_nombre = normalizar_busqueda_hdcp(
+        f"{participante.apellido} {participante.nombre}"
+    )
+
+    for h in handicaps:
+        nombre_hdcp = normalizar_busqueda_hdcp(h.nombre)
+        if nombre_hdcp in (nombre_apellido, apellido_nombre):
+            return h.hdcp
+
+        partes_jugador = set(nombre_apellido.split())
+        partes_hdcp = set(nombre_hdcp.split())
+        if partes_jugador and partes_jugador.issubset(partes_hdcp):
+            candidatos.append(h.hdcp)
+
+    if len(candidatos) == 1:
+        return candidatos[0]
+
+    return "-"
+
+
+def calcular_hdcp_85(valor_hdcp):
+    if valor_hdcp in (None, "", "-"):
+        return "-"
+
+    try:
+        texto = str(valor_hdcp).strip().replace(",", ".")
+        numero = float(texto)
+        return str(int(numero * 0.85 + 0.5))
+    except (TypeError, ValueError):
+        return "-"
+
+
+def separar_nombre_salida(texto):
+    texto = " ".join((texto or "").strip().split())
+    if "," in texto:
+        apellido, nombre = texto.split(",", 1)
+        return nombre.strip(), apellido.strip()
+    partes = texto.split()
+    if len(partes) <= 1:
+        return texto, ""
+    return " ".join(partes[:-1]), partes[-1]
+
+
+def salidas_con_jugadores():
+    handicaps = Handicap.query.all()
+    salidas = Salida.query.order_by(Salida.orden.asc(), Salida.id.asc()).all()
+    resultado = []
+
+    for salida in salidas:
+        jugadores = []
+        for asignacion in sorted(salida.asignaciones, key=lambda x: (x.orden or 0, x.id)):
+            if asignacion.participante:
+                p = asignacion.participante
+                nombre, apellido = p.nombre, p.apellido
+                equipo = p.equipo or ""
+                hdcp_base = buscar_hdcp_participante(p, handicaps)
+                origen = "inscripto"
+            elif asignacion.handicap:
+                nombre, apellido = separar_nombre_salida(asignacion.handicap.nombre)
+                equipo = asignacion.equipo_manual or ""
+                hdcp_base = asignacion.handicap.hdcp or "-"
+                origen = "excel"
+            else:
+                nombre, apellido = separar_nombre_salida(asignacion.nombre_manual)
+                equipo = asignacion.equipo_manual or "Invitado"
+                hdcp_base = "-"
+                origen = "manual"
+
+            hdcp = asignacion.hdcp_manual if asignacion.hdcp_manual not in (None, "") else hdcp_base
+            jugadores.append({
+                "asignacion_id": asignacion.id,
+                "nombre": nombre,
+                "apellido": apellido,
+                "nombre_completo": " ".join(x for x in [nombre, apellido] if x).strip(),
+                "equipo": equipo,
+                "hdcp": hdcp,
+                "hdcp_85": calcular_hdcp_85(hdcp),
+                "origen": origen
+            })
+
+        resultado.append({
+            "id": salida.id,
+            "horario": salida.horario,
+            "hoyo": salida.hoyo or "",
+            "jugadores": jugadores
+        })
+    return resultado
+
+
+def jugadores_sin_salida():
+    asignados = {
+        x[0] for x in db.session.query(SalidaJugador.participante_id)
+        .filter(SalidaJugador.participante_id.isnot(None)).all()
+    }
+    return [p for p in participantes_ordenados() if p.id not in asignados]
+
+
+
+def handicaps_sin_salida():
+    """Jugadores de la lista HDCP que todavía no fueron asignados a ningún grupo."""
+    ids_asignados = {
+        fila[0]
+        for fila in db.session.query(SalidaJugador.handicap_id)
+        .filter(SalidaJugador.handicap_id.isnot(None))
+        .all()
+    }
+
+    return [
+        h for h in Handicap.query.order_by(Handicap.nombre.asc()).all()
+        if h.id not in ids_asignados
+    ]
+
+
 def ahora_argentina():
     return datetime.utcnow() - timedelta(hours=3)
 
@@ -807,6 +1032,8 @@ def inscripcion_cerrada(config):
 @app.route("/")
 def index():
     config = Config.query.first()
+    admin_activo = session.get("admin", False)
+    ver_panel_admin = admin_activo and request.args.get("admin") == "1"
 
     menu_opciones = []
     if config and config.opciones_menu:
@@ -823,9 +1050,13 @@ def index():
         ).limit(200).all(),
         menu_opciones=menu_opciones,
         menu_activo=config.menu_activo,
-        admin=session.get("admin", False),
+        admin=admin_activo,
+        ver_panel_admin=ver_panel_admin,
         bg_path=bg_path,
         inscripcion_cerrada=inscripcion_cerrada(config),
+        salidas=salidas_con_jugadores(),
+        jugadores_sin_salida=jugadores_sin_salida(),
+        handicaps_salidas=handicaps_sin_salida(),
         config=config
     )
 
@@ -998,7 +1229,10 @@ def agregar():
 def admin_login():
     if request.form.get("password") == ADMIN_PASSWORD:
         session["admin"] = True
-    return redirect("/")
+        return redirect("/?admin=1")
+
+    flash("Contraseña incorrecta.")
+    return redirect("/admin-secret")
 
 
 @app.route("/admin-secret")
@@ -1028,6 +1262,7 @@ def update_config():
         config.opciones_menu = request.form.get("opciones_menu", "")
         config.menu_activo = bool(request.form.get("menu_activo"))
         config.whatsapp_activo = bool(request.form.get("whatsapp_activo"))
+        config.mostrar_salidas = bool(request.form.get("mostrar_salidas"))
 
         db.session.commit()
     except Exception as error:
@@ -1063,6 +1298,9 @@ def delete(id):
             detalle="Eliminado desde el panel administrador"
         )
 
+        SalidaJugador.query.filter_by(
+            participante_id=participante.id
+        ).delete(synchronize_session=False)
         db.session.delete(participante)
         db.session.commit()
     except Exception as error:
@@ -1127,6 +1365,7 @@ def reset():
                 detalle="Eliminado durante un reset general"
             )
 
+        SalidaJugador.query.delete(synchronize_session=False)
         Participante.query.delete(synchronize_session=False)
 
         registro_resumen = RegistroMovimiento(
@@ -1174,6 +1413,250 @@ def reset():
     socketio.emit("actualizar_registro")
 
     return redirect("/")
+
+def _hoyo_valido(hoyo):
+    try:
+        return 1 <= int(hoyo) <= 18
+    except (TypeError, ValueError):
+        return False
+
+
+@app.route("/salidas/crear-grupo", methods=["POST"])
+def crear_grupo_salida():
+    if not session.get("admin"):
+        return "No autorizado", 403
+
+    horario = request.form.get("horario", "").strip()
+    hoyo = request.form.get("hoyo", "").strip()
+    if not horario or not _hoyo_valido(hoyo):
+        flash("Completá un horario y un hoyo válido entre 1 y 18.")
+        return redirect("/?admin=1")
+
+    try:
+        ultimo = db.session.query(db.func.max(Salida.orden)).scalar() or 0
+        salida = Salida(horario=horario, hoyo=hoyo, orden=ultimo + 1)
+        db.session.add(salida)
+        db.session.flush()
+
+        cantidad = 0
+        usados_form = set()
+        for i in range(1, 5):
+            seleccion = request.form.get(f"jugador_{i}", "").strip()
+            nombre_manual = request.form.get(f"nombre_manual_{i}", "").strip()
+            hdcp_manual = request.form.get(f"hdcp_manual_{i}", "").strip()
+            equipo = request.form.get(f"equipo_manual_{i}", "").strip()
+
+            if not seleccion and not nombre_manual:
+                continue
+
+            if seleccion and seleccion != "__manual__":
+                handicap_id = int(seleccion)
+                if handicap_id in usados_form:
+                    raise ValueError("No podés repetir un jugador dentro del mismo grupo.")
+                usados_form.add(handicap_id)
+
+                h = db.session.get(Handicap, handicap_id)
+                if not h:
+                    raise ValueError("Uno de los jugadores ya no existe en la lista de HDCP.")
+                if SalidaJugador.query.filter_by(handicap_id=handicap_id).first():
+                    raise ValueError(f"{h.nombre} ya está asignado a otra salida.")
+
+                db.session.add(SalidaJugador(
+                    salida_id=salida.id,
+                    handicap_id=h.id,
+                    equipo_manual=equipo or "",
+                    hdcp_manual=hdcp_manual or None,
+                    orden=i
+                ))
+            else:
+                if not nombre_manual:
+                    raise ValueError(f"Falta el nombre del jugador {i}.")
+                db.session.add(SalidaJugador(
+                    salida_id=salida.id,
+                    nombre_manual=nombre_manual,
+                    equipo_manual=equipo or "Invitado",
+                    hdcp_manual=hdcp_manual or None,
+                    orden=i
+                ))
+            cantidad += 1
+
+        if not cantidad:
+            raise ValueError("Agregá por lo menos un jugador al grupo.")
+
+        db.session.commit()
+        flash(f"Grupo guardado: {cantidad} jugador(es).")
+        socketio.emit("actualizar_salidas")
+    except (ValueError, TypeError) as error:
+        rollback_transaccion("creacion de grupo")
+        flash(str(error))
+    except Exception as error:
+        rollback_transaccion("creacion de grupo")
+        registrar_error_transaccion("creacion de grupo", error)
+        flash("No se pudo guardar el grupo.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas/<int:salida_id>/editar", methods=["POST"])
+def editar_salida(salida_id):
+    if not session.get("admin"):
+        return "No autorizado", 403
+    salida = db.session.get(Salida, salida_id)
+    if not salida:
+        flash("Salida no encontrada.")
+        return redirect("/?admin=1")
+    horario = request.form.get("horario", "").strip()
+    hoyo = request.form.get("hoyo", "").strip()
+    if not horario or not _hoyo_valido(hoyo):
+        flash("Horario u hoyo inválido.")
+        return redirect("/?admin=1")
+    try:
+        salida.horario, salida.hoyo = horario, hoyo
+        db.session.commit()
+        socketio.emit("actualizar_salidas")
+        flash("Salida actualizada.")
+    except Exception as error:
+        rollback_transaccion("edicion de salida")
+        registrar_error_transaccion("edicion de salida", error)
+        flash("No se pudo modificar la salida.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas/<int:salida_id>/eliminar", methods=["POST"])
+def eliminar_salida(salida_id):
+    if not session.get("admin"):
+        return "No autorizado", 403
+    salida = db.session.get(Salida, salida_id)
+    if salida:
+        try:
+            db.session.delete(salida)
+            db.session.commit()
+            socketio.emit("actualizar_salidas")
+            flash("Salida eliminada.")
+        except Exception as error:
+            rollback_transaccion("eliminacion de salida")
+            registrar_error_transaccion("eliminacion de salida", error)
+            flash("No se pudo eliminar la salida.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas/asignacion/<int:asignacion_id>/editar", methods=["POST"])
+def editar_asignacion_salida(asignacion_id):
+    if not session.get("admin"):
+        return "No autorizado", 403
+    a = db.session.get(SalidaJugador, asignacion_id)
+    if not a:
+        flash("Jugador no encontrado.")
+        return redirect("/?admin=1")
+
+    nombre = request.form.get("nombre", "").strip()
+    hdcp = request.form.get("hdcp_manual", "").strip()
+    equipo = request.form.get("equipo_manual", "").strip()
+    if not nombre:
+        flash("El nombre no puede quedar vacío.")
+        return redirect("/?admin=1")
+
+    try:
+        # La edición libre convierte esa fila en manual y no altera el Excel maestro.
+        original = ""
+        if a.handicap:
+            original = a.handicap.nombre or ""
+        elif a.participante:
+            original = f"{a.participante.nombre} {a.participante.apellido}".strip()
+        else:
+            original = a.nombre_manual or ""
+
+        if normalizar_nombre(nombre) != normalizar_nombre(original):
+            a.participante_id = None
+            a.handicap_id = None
+            a.nombre_manual = nombre
+        elif not a.participante and not a.handicap:
+            a.nombre_manual = nombre
+
+        a.equipo_manual = equipo or a.equipo_manual
+        a.hdcp_manual = hdcp or None
+        db.session.commit()
+        socketio.emit("actualizar_salidas")
+        flash("Jugador actualizado.")
+    except Exception as error:
+        rollback_transaccion("edicion jugador salida")
+        registrar_error_transaccion("edicion jugador salida", error)
+        flash("No se pudo actualizar el jugador.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas/<int:salida_id>/agregar", methods=["POST"])
+def agregar_a_salida(salida_id):
+    if not session.get("admin"):
+        return "No autorizado", 403
+    salida = db.session.get(Salida, salida_id)
+    if not salida:
+        return redirect("/?admin=1")
+    if len(salida.asignaciones) >= 4:
+        flash("El grupo ya tiene 4 jugadores.")
+        return redirect("/?admin=1")
+
+    seleccion = request.form.get("jugador", "").strip()
+    nombre = request.form.get("nombre_manual", "").strip()
+    hdcp = request.form.get("hdcp_manual", "").strip()
+    equipo = request.form.get("equipo_manual", "").strip()
+    try:
+        orden = len(salida.asignaciones) + 1
+        if seleccion and seleccion != "__manual__":
+            h = db.session.get(Handicap, int(seleccion))
+            if not h:
+                raise ValueError("Jugador no encontrado.")
+            if SalidaJugador.query.filter_by(handicap_id=h.id).first():
+                raise ValueError(f"{h.nombre} ya está asignado.")
+            nuevo = SalidaJugador(
+                salida_id=salida.id, handicap_id=h.id,
+                equipo_manual=equipo or "", hdcp_manual=hdcp or None, orden=orden
+            )
+        else:
+            if not nombre:
+                raise ValueError("Escribí el nombre del invitado.")
+            nuevo = SalidaJugador(
+                salida_id=salida.id, nombre_manual=nombre,
+                equipo_manual=equipo or "Invitado", hdcp_manual=hdcp or None, orden=orden
+            )
+        db.session.add(nuevo)
+        db.session.commit()
+        socketio.emit("actualizar_salidas")
+        flash("Jugador agregado.")
+    except (ValueError, TypeError) as error:
+        rollback_transaccion("agregar jugador salida")
+        flash(str(error))
+    except Exception as error:
+        rollback_transaccion("agregar jugador salida")
+        registrar_error_transaccion("agregar jugador salida", error)
+        flash("No se pudo agregar el jugador.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas/asignacion/<int:asignacion_id>/quitar", methods=["POST"])
+def quitar_asignacion_salida(asignacion_id):
+    if not session.get("admin"):
+        return "No autorizado", 403
+    a = db.session.get(SalidaJugador, asignacion_id)
+    if a:
+        try:
+            db.session.delete(a)
+            db.session.commit()
+            socketio.emit("actualizar_salidas")
+            flash("Jugador quitado.")
+        except Exception as error:
+            rollback_transaccion("quitar jugador salida")
+            registrar_error_transaccion("quitar jugador salida", error)
+            flash("No se pudo quitar el jugador.")
+    return redirect("/?admin=1")
+
+
+@app.route("/salidas.json")
+def salidas_json():
+    return jsonify({
+        "mostrar_salidas": bool(Config.query.first().mostrar_salidas),
+        "salidas": salidas_con_jugadores()
+    })
+
 
 @app.route("/export")
 def export():
